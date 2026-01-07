@@ -12,16 +12,31 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 
 @Composable
 fun LoginScreen(onLoginSuccess: () -> Unit) {
+    val logoUrl = "http://160.250.247.5/images/logo.jpg"
     val brandColor = Color(0xFF0066FF)
     Column(
         modifier = Modifier.fillMaxSize().padding(24.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Icon(Icons.Default.Person, null, modifier = Modifier.size(80.dp), tint = brandColor)
+        AsyncImage(
+            model = ImageRequest.Builder(LocalContext.current)
+                .data(logoUrl)
+                .crossfade(true)
+                .build(),
+            contentDescription = "Logo TechZ",
+            modifier = Modifier
+                .size(300.dp)
+                .padding(bottom = 16.dp),
+            contentScale = ContentScale.Crop
+        )
         Text("TECHZ STORE", fontSize = 32.sp, fontWeight = FontWeight.Bold, color = brandColor)
         Spacer(Modifier.height(32.dp))
         OutlinedTextField(value = "", onValueChange = {}, label = { Text("Email") }, modifier = Modifier.fillMaxWidth())

@@ -1,10 +1,27 @@
 package com.example.techz.model
-import androidx.compose.ui.graphics.Color
+
+
+import com.google.gson.annotations.SerializedName
 
 data class Product(
-    val id: String,
+    // @SerializedName("tên_cột_trong_json")
+    // val tên_biến_trong_kotlin: Kiểu_dữ_liệu
+
+    @SerializedName("id_san_pham")
+    val id: Int,
+
+    @SerializedName("ten_san_pham")
     val name: String,
-    val price: String,
-    val priceValue: Double,
-    val imageColor: Color
+
+    @SerializedName("gia")
+    val price: Double,
+
+    @SerializedName("hinh_anh")
+    val image: String?,
+
+    @SerializedName("mo_ta")
+    val description: String?,
+
+    @SerializedName("loai_linh_kien")
+    val category: String?
 )

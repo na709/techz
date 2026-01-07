@@ -8,15 +8,11 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.techz.ui.navigation.Screen
 
-data class BottomNavItem(val label: String, val route: String, val icon: ImageVector)
 
 @Composable
 fun TechZBottomBar(navController: NavController) {
@@ -24,36 +20,47 @@ fun TechZBottomBar(navController: NavController) {
     val currentRoute = navBackStackEntry?.destination?.route
     val brandColor = Color(0xFF0066FF)
 
-    val items = listOf(
-        BottomNavItem("Trang chủ", Screen.Home.route, Icons.Default.Home),
-        BottomNavItem("Sản phẩm", Screen.ProductList.route, Icons.Default.List),
-        BottomNavItem("Tài khoản", Screen.Login.route, Icons.Default.Person)
-    )
-
-    NavigationBar(containerColor = Color.White, tonalElevation = 8.dp) {
-        items.forEach { item ->
-            val isSelected = currentRoute == item.route
-            NavigationBarItem(
-                selected = isSelected,
-                onClick = {
-                    if (currentRoute != item.route) {
-                        navController.navigate(item.route) {
-                            popUpTo(Screen.Home.route) { saveState = true }
-                            launchSingleTop = true
-                            restoreState = true
-                        }
-                    }
-                },
-                icon = { Icon(item.icon, contentDescription = item.label) },
-                label = { Text(item.label, fontSize = 10.sp, fontWeight = if(isSelected) FontWeight.Bold else FontWeight.Normal) },
-                colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = brandColor,
-                    selectedTextColor = brandColor,
-                    indicatorColor = Color.Transparent,
-                    unselectedIconColor = Color.Gray,
-                    unselectedTextColor = Color.Gray
-                )
+    NavigationBar(containerColor = Color.White, tonalElevation = 8.dp, contentColor = brandColor) {
+        NavigationBarItem(
+            icon = { Icon(Icons.Default.Home, contentDescription = "Trang chủ") },
+            label = { Text("Trang chủ") },
+            selected = currentRoute == Screen.Home.route,
+            onClick = {
+                navController.navigate(Screen.Home.route) {
+                    popUpTo(Screen.Home.route) { inclusive = true }
+                    launchSingleTop = true
+                }
+            },
+            colors = NavigationBarItemDefaults.colors(
+                selectedIconColor = Color(0xFF0066FF),
+                selectedTextColor = Color(0xFF0066FF),
+                indicatorColor = Color(0xFFE6F0FF)
             )
-        }
+        )
+
+        NavigationBarItem(
+            icon = { Icon(Icons.Default.List, contentDescription = "Sản phẩm") },
+            label = { Text("Sản phẩm") },
+            selected = currentRoute == Screen.ProductList.route,
+            onClick = {
+                navController.navigate(Screen.ProductList.route) {
+                    popUpTo(Screen.Home.route)
+                    launchSingleTop = true
+                }
+            },
+            colors = NavigationBarItemDefaults.colors(
+                selectedIconColor = Color(0xFF0066FF),
+                selectedTextColor = Color(0xFF0066FF),
+                indicatorColor = Color(0xFFE6F0FF)
+            )
+        )
+
+        NavigationBarItem(
+            icon = { Icon(Icons.Default.Person, contentDescription = "Tài khoản") },
+            label = { Text("Tài khoản") },
+            selected = false, // Chưa làm
+            onClick = { /* TODO */ },
+            colors = NavigationBarItemDefaults.colors(selectedIconColor = Color.Gray)
+        )
     }
 }
