@@ -15,10 +15,19 @@ import com.example.techz.ui.navigation.Screen
 
 
 @Composable
-fun TechZBottomBar(navController: NavController) {
+fun TechZBottomBar(
+        navController: NavController,
+        currentName:String?) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
     val brandColor = Color(0xFF0066FF)
+
+    val accountLabel = if (!currentName.isNullOrBlank()) {
+        val shortName = currentName.trim().substringAfterLast(" ")
+        "Hi, $shortName!!"
+    } else {
+        "Tài khoản"
+    }
 
     NavigationBar(containerColor = Color.White, tonalElevation = 8.dp, contentColor = brandColor) {
         NavigationBarItem(
@@ -57,7 +66,7 @@ fun TechZBottomBar(navController: NavController) {
 
         NavigationBarItem(
             icon = { Icon(Icons.Default.Person, contentDescription = "Tài khoản") },
-            label = { Text("Tài khoản") },
+            label = { Text(text = accountLabel) },
             selected = false, // Chưa làm
             onClick = { /* TODO */ },
             colors = NavigationBarItemDefaults.colors(selectedIconColor = Color.Gray)

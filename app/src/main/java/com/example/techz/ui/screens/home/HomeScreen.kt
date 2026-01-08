@@ -1,7 +1,7 @@
 package com.example.techz.ui.screens.home
 
 import android.util.Log
-import androidx.compose.foundation.background
+import android.content.Context
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -39,10 +39,15 @@ fun HomeScreen(
     onGoToCart: () -> Unit,
     onViewAll: () -> Unit
 ) {
+    val context = LocalContext.current
+    var currentName by remember { mutableStateOf<String?>(null) }
     var productList by remember { mutableStateOf<List<Product>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
 
     LaunchedEffect(Unit) {
+        val sharedPref = context.getSharedPreferences("MY_APP_PREF", Context.MODE_PRIVATE)
+        currentName = sharedPref.getString("USER_NAME", null)
+
         RetrofitClient.instance.getListProducts().enqueue(object : Callback<List<Product>> {
             override fun onResponse(call: Call<List<Product>>, response: Response<List<Product>>) {
                 if (response.isSuccessful) {
@@ -74,7 +79,7 @@ fun HomeScreen(
                 )
             )
         },
-        bottomBar = { TechZBottomBar(navController) }
+        bottomBar = { TechZBottomBar(navController,currentName) }
     ) { padding ->
         if (isLoading) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -90,7 +95,7 @@ fun HomeScreen(
                             .build(),
                         contentDescription = "Banner Sales",
                         modifier = Modifier
-                            .fillMaxWidth(2f)
+                            .fillMaxWidth()
                             .height(400.dp)
                             .padding(bottom = 16.dp)
                             .clip(RoundedCornerShape(24.dp)),

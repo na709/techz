@@ -1,5 +1,6 @@
 package com.example.techz.ui.screens.product
-
+import android.content.Context
+import androidx.compose.ui.platform.LocalContext
 import android.util.Log
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -23,11 +24,15 @@ import retrofit2.Response
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProductListScreen(navController: NavHostController, onProductClick: (Int) -> Unit) { // Sửa String -> Int
-
+    val context = LocalContext.current
+    var currentName by remember { mutableStateOf<String?>(null) }
     var productList by remember { mutableStateOf<List<Product>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
 
     LaunchedEffect(Unit) {
+        val sharedPref = context.getSharedPreferences("MY_APP_PREF", Context.MODE_PRIVATE)
+        currentName = sharedPref.getString("USER_NAME", null)
+
         RetrofitClient.instance.getListProducts().enqueue(object : Callback<List<Product>> {
             override fun onResponse(call: Call<List<Product>>, response: Response<List<Product>>) {
                 if (response.isSuccessful) {
@@ -52,7 +57,7 @@ fun ProductListScreen(navController: NavHostController, onProductClick: (Int) ->
                 )
             )
         },
-        bottomBar = { TechZBottomBar(navController) }
+        bottomBar = { TechZBottomBar(navController, currentName) }
     ) { padding ->
         Box(modifier = Modifier.padding(padding).fillMaxSize()) {
             if (isLoading) {
