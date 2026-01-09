@@ -1,5 +1,4 @@
 package com.example.techz.ui.navigation
-
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -32,13 +31,24 @@ fun AppNavGraph() {
                     navController.navigate("detail/$productId")
                 },
                 onGoToCart = { navController.navigate(Screen.Cart.route) },
-                onViewAll = { navController.navigate(Screen.ProductList.route) }
+                onViewAll = { navController.navigate(Screen.ProductList.route) },
+                onCategoryClick = { category ->
+                    navController.navigate("${Screen.ProductList.route}?category=$category")
+                }//new
             )
         }
 
-        composable(Screen.ProductList.route) {
+        composable(
+            route = "${Screen.ProductList.route}?category={category}",
+            arguments = listOf(
+                navArgument("category") { nullable = true }
+            )
+        ) { backStackEntry ->
+            val category = backStackEntry.arguments?.getString("category")
+
             ProductListScreen(
                 navController = navController,
+                initialCategory = category, // Truyền category vào màn hình
                 onProductClick = { id ->
                     navController.navigate("detail/$id")
                 }
@@ -52,6 +62,7 @@ fun AppNavGraph() {
             )
         }
 
+        //ở đây đã sửa phần này
         composable(
             route = "detail/{id}",
             arguments = listOf(
@@ -63,9 +74,11 @@ fun AppNavGraph() {
             ProductDetailScreen(
                 productId = productId,
                 onAddToCart = { navController.navigate(Screen.Cart.route) },
-                onBack = { navController.popBackStack() }
+                onBack = { navController.popBackStack() },
+                onProductClick = { id -> navController.navigate("detail/$id") }
             )
         }
+
 
         composable(Screen.Payment.route) {
             PaymentScreen(
