@@ -41,8 +41,10 @@ interface ApiService {
 object RetrofitClient {
     //api server
     //private const val BASE_URL = "http://160.250.247.5:4567/"
+    //api server
+    private const val BASE_URL = "https://dvna.site/"
     //api test
-    private const val BASE_URL = "http://103.82.38.62:3000/"
+    //private const val BASE_URL = "http://103.82.38.62:3000/"
     //api local
 
     //private const val BASE_URL = "http://10.0.2.2:3000/"

@@ -16,7 +16,7 @@ data class Product(
     @SerializedName("gia")
     val price: Double,
 
-    @SerializedName("hinh_anh")
+    @SerializedName("hinh_anh_full")
     val image: String?,
 
     @SerializedName("mo_ta")

@@ -42,7 +42,7 @@ fun ProductItem(product: Product, onClick: (Int) -> Unit) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(120.dp),
-                contentScale = ContentScale.Crop
+                contentScale = ContentScale.Fit
             )
 
             Column(Modifier.padding(8.dp)) {

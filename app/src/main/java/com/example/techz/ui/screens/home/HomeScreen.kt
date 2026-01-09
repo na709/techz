@@ -90,7 +90,8 @@ fun HomeScreen(
                 item {
                     AsyncImage(
                         model = ImageRequest.Builder(LocalContext.current)
-                            .data("http://160.250.247.5/images/banner-sales.jpg")
+                            .data("https://dvna.site/images/banner-sales.jpg")
+                            //.data("http://160.250.247.5/images/banner-sales.jpg")
                             .crossfade(true)
                             .build(),
                         contentDescription = "Banner Sales",

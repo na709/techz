@@ -42,7 +42,8 @@ fun RegisterScreen(
     var confirmPassword by remember { mutableStateOf("") }
     var isLoading by remember { mutableStateOf(false) }
 
-    val logoUrl = "http://160.250.247.5/images/logo.jpg"
+    //val logoUrl = "http://160.250.247.5/images/logo.jpg"
+    val logoUrl = "https://dvna.site/images/logo.jpg"
     val brandColor = Color(0xFF0066FF)
 
     fun handleRegister() {
