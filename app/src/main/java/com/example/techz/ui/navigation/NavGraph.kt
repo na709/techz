@@ -12,6 +12,7 @@ import com.example.techz.ui.screens.login.LoginScreen
 import com.example.techz.ui.screens.payment.PaymentScreen
 import com.example.techz.ui.screens.product.ProductDetailScreen
 import com.example.techz.ui.screens.product.ProductListScreen
+import com.example.techz.ui.screens.register.RegisterScreen
 
 @Composable
 fun AppNavGraph() {
@@ -20,9 +21,17 @@ fun AppNavGraph() {
     NavHost(navController = navController, startDestination = Screen.Login.route) {
 
         composable(Screen.Login.route) {
-            LoginScreen(onLoginSuccess = {
-                navController.navigate(Screen.Home.route) { popUpTo(Screen.Login.route) { inclusive = true } }
-            })
+            LoginScreen(
+                onLoginSuccess =
+                    {
+                        navController.navigate(Screen.Home.route) { popUpTo(Screen.Login.route) { inclusive = true } }
+                    },
+                onClickRegister =
+                    {
+                        navController.navigate(Screen.Register.route) { popUpTo(Screen.Login.route) { inclusive = true } }
+                    }
+
+            )
         }
 
         composable(Screen.Home.route) {
@@ -50,6 +59,14 @@ fun AppNavGraph() {
                 onCheckout = { navController.navigate(Screen.Payment.route) },
                 onBack = { navController.popBackStack() }
             )
+        }
+        composable(Screen.Register.route) {
+            RegisterScreen(onRegister = {
+                navController.navigate(Screen.Home.route) { popUpTo(Screen.Register.route) { inclusive = true } }
+            },
+                onNavigateToLogin = {
+                    navController.navigate(Screen.Login.route) { popUpTo(Screen.Register.route) { inclusive = true } }
+                })
         }
 
         composable(

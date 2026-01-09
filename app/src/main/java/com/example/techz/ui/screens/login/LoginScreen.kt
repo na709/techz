@@ -22,9 +22,11 @@ import retrofit2.Response
 import com.example.techz.model.AuthResponse // File model vừa tạo
 import com.example.techz.model.LoginRequest // File model request
 import com.example.techz.service.RetrofitClient
+import com.example.techz.service.UserSession
 
 @Composable
-fun LoginScreen(onLoginSuccess: () -> Unit) {
+fun LoginScreen(onLoginSuccess: () -> Unit,
+                onClickRegister: () -> Unit) {
     val context = LocalContext.current
 
     var username by remember { mutableStateOf("") }
@@ -48,15 +50,12 @@ fun LoginScreen(onLoginSuccess: () -> Unit) {
                 if (response.isSuccessful && response.body()?.success == true) {
                     val authData = response.body()
                     val user = authData?.user
-                    val sharedPref = context.getSharedPreferences("MY_APP_PREF", Context.MODE_PRIVATE)
-                    with(sharedPref.edit()) {
-                        putString("USER_NAME", user?.name)
-                        apply()
+                    user?.name?.let {
+                        UserSession.login(context, it)
                     }
                     Toast.makeText(context, "Xin chào ${user?.name}!", Toast.LENGTH_SHORT).show()
                     onLoginSuccess()
-                }
-                else {
+                } else {
                     Toast.makeText(context, "Sai tài khoản hoặc mật khẩu!", Toast.LENGTH_SHORT).show()
                 }
             }
@@ -130,6 +129,32 @@ fun LoginScreen(onLoginSuccess: () -> Unit) {
                 Text("ĐANG XỬ LÝ...")
             } else {
                 Text("ĐĂNG NHẬP")
+            }
+        }
+        Spacer(modifier = Modifier.fillMaxWidth().height(20.dp))
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.Center, // Căn giữa toàn bộ dòng
+            verticalAlignment = Alignment.CenterVertically // Căn giữa theo chiều dọc
+        ) {
+            Text(
+                text = "Chưa có tài khoản?",
+                fontSize = 14.sp,
+                color = Color.Gray
+            )
+
+            TextButton(
+                onClick = { onClickRegister() },
+                contentPadding = PaddingValues(start = 4.dp)
+            ) {
+                Text(
+                    text = "Đăng ký ngay",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = brandColor
+                )
             }
         }
     }
