@@ -1,8 +1,12 @@
 package com.example.techz.ui.screens.home
 import com.example.techz.ui.screens.product.CATEGORIES
 import android.util.Log
+<<<<<<< HEAD
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+=======
+import android.content.Context
+>>>>>>> 019325fb89aa31024a014cfd4a714f62e972271e
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -53,10 +57,15 @@ fun HomeScreen(
     onViewAll: () -> Unit,
     onCategoryClick: (String) -> Unit
 ) {
+    val context = LocalContext.current
+    var currentName by remember { mutableStateOf<String?>(null) }
     var productList by remember { mutableStateOf<List<Product>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
 
     LaunchedEffect(Unit) {
+        val sharedPref = context.getSharedPreferences("MY_APP_PREF", Context.MODE_PRIVATE)
+        currentName = sharedPref.getString("USER_NAME", null)
+
         RetrofitClient.instance.getListProducts().enqueue(object : Callback<List<Product>> {
             override fun onResponse(call: Call<List<Product>>, response: Response<List<Product>>) {
                 if (response.isSuccessful) {
@@ -88,7 +97,7 @@ fun HomeScreen(
                 )
             )
         },
-        bottomBar = { TechZBottomBar(navController) }
+        bottomBar = { TechZBottomBar(navController,currentName) }
     ) { padding ->
         if (isLoading) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -104,7 +113,11 @@ fun HomeScreen(
                             .build(),
                         contentDescription = "Banner Sales",
                         modifier = Modifier
+<<<<<<< HEAD
                             .fillMaxWidth(1f)
+=======
+                            .fillMaxWidth()
+>>>>>>> 019325fb89aa31024a014cfd4a714f62e972271e
                             .height(400.dp)
                             .padding(bottom = 16.dp)
                             .clip(RoundedCornerShape(24.dp)),

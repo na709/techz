@@ -1,5 +1,6 @@
 package com.example.techz.ui.screens.product
-
+import android.content.Context
+import androidx.compose.ui.platform.LocalContext
 import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -44,8 +45,15 @@ val CATEGORIES = listOf(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
+<<<<<<< HEAD
 fun ProductListScreen(navController: NavHostController,initialCategory: String? = null, onProductClick: (Int) -> Unit) {
     var originalList by remember { mutableStateOf<List<Product>>(emptyList()) }
+=======
+fun ProductListScreen(navController: NavHostController, onProductClick: (Int) -> Unit) { // Sửa String -> Int
+    val context = LocalContext.current
+    var currentName by remember { mutableStateOf<String?>(null) }
+    var productList by remember { mutableStateOf<List<Product>>(emptyList()) }
+>>>>>>> 019325fb89aa31024a014cfd4a714f62e972271e
     var isLoading by remember { mutableStateOf(true) }
 
     var searchQuery by remember { mutableStateOf("") }
@@ -59,6 +67,9 @@ fun ProductListScreen(navController: NavHostController,initialCategory: String? 
 
     // Gọi API lấy danh sách sản phẩm
     LaunchedEffect(Unit) {
+        val sharedPref = context.getSharedPreferences("MY_APP_PREF", Context.MODE_PRIVATE)
+        currentName = sharedPref.getString("USER_NAME", null)
+
         RetrofitClient.instance.getListProducts().enqueue(object : Callback<List<Product>> {
             override fun onResponse(call: Call<List<Product>>, response: Response<List<Product>>) {
                 if (response.isSuccessful) {
@@ -163,7 +174,7 @@ fun ProductListScreen(navController: NavHostController,initialCategory: String? 
                 }
             }
         },
-        bottomBar = { TechZBottomBar(navController) }
+        bottomBar = { TechZBottomBar(navController, currentName) }
     ) { padding ->
         Box(
             modifier = Modifier
