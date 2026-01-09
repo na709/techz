@@ -12,18 +12,21 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.techz.ui.navigation.Screen
+import com.example.techz.service.UserSession
 
 
 @Composable
 fun TechZBottomBar(
-        navController: NavController,
-        currentName:String?) {
+    navController: NavController,
+    currentName: String?
+) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
     val brandColor = Color(0xFF0066FF)
+    val userName = UserSession.currentUserName
 
-    val accountLabel = if (!currentName.isNullOrBlank()) {
-        val shortName = currentName.trim().substringAfterLast(" ")
+    val accountLabel = if (!userName.isNullOrBlank()) {
+        val shortName = userName.trim().substringAfterLast(" ")
         "Hi, $shortName!!"
     } else {
         "Tài khoản"
