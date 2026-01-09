@@ -45,15 +45,12 @@ val CATEGORIES = listOf(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-<<<<<<< HEAD
-fun ProductListScreen(navController: NavHostController,initialCategory: String? = null, onProductClick: (Int) -> Unit) {
+
+fun ProductListScreen(navController: NavHostController,initialCategory: String? = null, onProductClick: (Int) -> Unit) { // Sửa String -> Int
     var originalList by remember { mutableStateOf<List<Product>>(emptyList()) }
-=======
-fun ProductListScreen(navController: NavHostController, onProductClick: (Int) -> Unit) { // Sửa String -> Int
     val context = LocalContext.current
     var currentName by remember { mutableStateOf<String?>(null) }
     var productList by remember { mutableStateOf<List<Product>>(emptyList()) }
->>>>>>> 019325fb89aa31024a014cfd4a714f62e972271e
     var isLoading by remember { mutableStateOf(true) }
 
     var searchQuery by remember { mutableStateOf("") }

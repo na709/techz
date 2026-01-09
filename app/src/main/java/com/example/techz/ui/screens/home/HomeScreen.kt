@@ -1,12 +1,9 @@
 package com.example.techz.ui.screens.home
 import com.example.techz.ui.screens.product.CATEGORIES
 import android.util.Log
-<<<<<<< HEAD
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-=======
 import android.content.Context
->>>>>>> 019325fb89aa31024a014cfd4a714f62e972271e
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -113,11 +110,8 @@ fun HomeScreen(
                             .build(),
                         contentDescription = "Banner Sales",
                         modifier = Modifier
-<<<<<<< HEAD
                             .fillMaxWidth(1f)
-=======
                             .fillMaxWidth()
->>>>>>> 019325fb89aa31024a014cfd4a714f62e972271e
                             .height(400.dp)
                             .padding(bottom = 16.dp)
                             .clip(RoundedCornerShape(24.dp)),
