@@ -1,7 +1,5 @@
 package com.example.techz.ui.screens.admin
 
-import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -12,17 +10,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Chat
 import androidx.compose.material.icons.automirrored.outlined.ExitToApp
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.List
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
@@ -32,6 +24,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
+import com.example.techz.ui.components.TechZBottomBarFull
+import com.example.techz.ui.navigation.Screen
 
 // Data model cho các nút chức năng
 data class DashboardItem(
@@ -49,7 +43,7 @@ fun AdminDashboardScreen(
     // Danh sách 5 chức năng quản lý
     val dashboardItems = listOf(
         DashboardItem("Product", Icons.Outlined.Inventory2) { /* Navigate to Product */ },
-        DashboardItem("Order", Icons.Outlined.ShoppingCart) { /* Navigate to Order */ },
+        DashboardItem("Order", Icons.Outlined.ShoppingCart) { navController.navigate(Screen.AdminOrder.route) },
         DashboardItem("Comment", Icons.AutoMirrored.Outlined.Chat) { /* Navigate to Comment */ },
         DashboardItem("Account", Icons.Outlined.Person) { /* Navigate to Account */ },
         DashboardItem("Voucher", Icons.Outlined.ConfirmationNumber) { /* Navigate to Voucher */ }
@@ -82,8 +76,7 @@ fun AdminDashboardScreen(
             )
         },
         // GỌI COMPONENT BOTTOM BAR TẠI ĐÂY
-        bottomBar = {
-            TechZBottomBarFull(navController = navController)
+        bottomBar = {  TechZBottomBarFull(navController = navController)
         },
         containerColor = Color.White
     ) { padding ->
@@ -136,63 +129,6 @@ fun AdminDashboardScreen(
 }
 
 // -----------------------------------------------------------
-// PHẦN BẠN KHOANH TRÒN: BOTTOM NAVIGATION BAR
-// -----------------------------------------------------------
-@Composable
-fun TechZBottomBarFull(navController: NavHostController) {
-    NavigationBar(
-        containerColor = Color(0xFFEEEEEE), // Màu nền xám nhạt cho thanh bar
-        tonalElevation = 8.dp
-    ) {
-        // Item 1: Trang chủ
-        NavigationBarItem(
-            icon = { Icon(Icons.Filled.Home, contentDescription = "Home") },
-            label = { Text("Trang chủ", fontSize = 10.sp) },
-            selected = false,
-            onClick = { /* Nav to Home */ },
-            colors = NavigationBarItemDefaults.colors(
-                unselectedIconColor = Color.Gray,
-                unselectedTextColor = Color.Gray
-            )
-        )
-        // Item 2: Sản phẩm
-        NavigationBarItem(
-            icon = { Icon(Icons.Filled.List, contentDescription = "Product") },
-            label = { Text("Sản phẩm", fontSize = 10.sp) },
-            selected = false,
-            onClick = { /* Nav to Product List */ },
-            colors = NavigationBarItemDefaults.colors(
-                unselectedIconColor = Color.Gray,
-                unselectedTextColor = Color.Gray
-            )
-        )
-        // Item 3: Tài khoản
-        NavigationBarItem(
-            icon = { Icon(Icons.Filled.Person, contentDescription = "Account") },
-            label = { Text("Tài khoản", fontSize = 10.sp) },
-            selected = false,
-            onClick = { /* Nav to Account */ },
-            colors = NavigationBarItemDefaults.colors(
-                unselectedIconColor = Color.Gray,
-                unselectedTextColor = Color.Gray
-            )
-        )
-        // Item 4: DASHBOARD (ĐANG ĐƯỢC CHỌN - MÀU XANH)
-        NavigationBarItem(
-            icon = { Icon(Icons.Filled.Settings, contentDescription = "Dashboard") }, // Icon bánh răng/Dashboard
-            label = { Text("Dashboard", fontSize = 10.sp, fontWeight = FontWeight.Bold) },
-            selected = true, // Đang ở màn hình này nên set true
-            onClick = { /* Do nothing */ },
-            colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = Color(0xFF03A9F4), // Màu icon khi chọn (Xanh)
-                selectedTextColor = Color(0xFF03A9F4), // Màu chữ khi chọn
-                indicatorColor = Color.White // Màu nền tròn sau icon
-            )
-        )
-    }
-}
-
-// -----------------------------------------------------------
 // CÁC COMPOSABLE CON KHÁC
 // -----------------------------------------------------------
 
@@ -223,40 +159,6 @@ fun DashboardItemCard(
     }
 }
 
-@Composable
-fun StatCardRow() {
-    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-        // Card con ví dụ
-        Card(
-            modifier = Modifier.weight(1f).height(80.dp),
-            colors = CardDefaults.cardColors(containerColor = Color(0xFFE0E0E0)),
-            shape = RoundedCornerShape(12.dp)
-        ) {
-            Column(
-                modifier = Modifier.fillMaxSize(),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text("Revenue", fontSize = 12.sp, color = Color.Gray)
-                Text("50.5M", fontSize = 18.sp, fontWeight = FontWeight.Bold)
-            }
-        }
-        Card(
-            modifier = Modifier.weight(1f).height(80.dp),
-            colors = CardDefaults.cardColors(containerColor = Color(0xFFE0E0E0)),
-            shape = RoundedCornerShape(12.dp)
-        ) {
-            Column(
-                modifier = Modifier.fillMaxSize(),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text("Orders", fontSize = 12.sp, color = Color.Gray)
-                Text("1,204", fontSize = 18.sp, fontWeight = FontWeight.Bold)
-            }
-        }
-    }
-}
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable

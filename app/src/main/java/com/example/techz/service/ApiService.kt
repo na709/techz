@@ -16,15 +16,11 @@ interface ApiService {
 
     @POST("api/login")
     fun loginUser(@Body request: LoginRequest): Call<AuthResponse>
-    // API 1: Đăng nhập Admin
-    // Endpoint: http://localhost:3000/api/v2/login
-    @POST("api/v2/login")
-    fun loginAdmin(@Body request: LoginRequest): Call<AuthResponse>
 
     // API 2: Tạo tài khoản Quản lý (Chỉ dành cho Super Admin)
     // Endpoint: http://localhost:3000/api/v2/register
-    @POST("api/v2/register")
-    fun createManager(@Body request: CreateManagerRequest): Call<AuthResponse>
+    //@POST("api/v2/register")
+    //fun createManager(@Body request: CreateManagerRequest): Call<AuthResponse>
 
     // get list products
     @GET("api/products")

@@ -6,6 +6,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.techz.ui.screens.admin.AdminDashboardScreen
+import com.example.techz.ui.screens.admin.AdminOrderScreen
 import com.example.techz.ui.screens.cart.CartScreen
 import com.example.techz.ui.screens.home.HomeScreen
 import com.example.techz.ui.screens.login.LoginScreen
@@ -17,11 +19,12 @@ import com.example.techz.ui.screens.product.ProductListScreen
 fun AppNavGraph() {
     val navController = rememberNavController()
 
-    NavHost(navController = navController, startDestination = Screen.Login.route) {
+    NavHost(navController = navController, startDestination = Screen.AdminDashboard.route) {
 
         composable(Screen.Login.route) {
             LoginScreen(onLoginSuccess = {
-                navController.navigate(Screen.Home.route) { popUpTo(Screen.Login.route) { inclusive = true } }
+                navController.navigate(Screen.AdminDashboard.route) { popUpTo(Screen.Login.route) { inclusive = true }
+                }
             })
         }
 
@@ -72,6 +75,20 @@ fun AppNavGraph() {
                 onConfirm = { navController.navigate(Screen.Home.route) { popUpTo(Screen.Home.route) { inclusive = true } } },
                 onBack = { navController.popBackStack() }
             )
+        }
+        composable(Screen.AdminDashboard.route) {
+            AdminDashboardScreen(
+                navController = navController,
+                onLogout = { navController.navigate(Screen.Login.route) { popUpTo(0) { inclusive = true }
+                    }
+                }
+            )
+        }
+        composable(Screen.AdminOrder.route) {
+            AdminOrderScreen(navController = navController)
+        }
+        composable(Screen.Home.route) {
+            AdminOrderScreen(navController = navController)
         }
     }
 }
