@@ -29,6 +29,7 @@ import retrofit2.Callback
 import retrofit2.Response
 import java.text.NumberFormat
 import java.util.Locale
+import kotlin.math.abs
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -41,13 +42,32 @@ fun ProductDetailScreen(
     var product by remember { mutableStateOf<Product?>(null) }
     var relatedProducts by remember { mutableStateOf<List<Product>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
-
     LaunchedEffect(productId) {
         isLoading = true
+
         RetrofitClient.instance.getProductDetail(productId).enqueue(object : Callback<Product> {
             override fun onResponse(call: Call<Product>, response: Response<Product>) {
                 if (response.isSuccessful) {
-                    product = response.body()
+                    val currentProduct = response.body()
+                    product = currentProduct
+
+                    if (currentProduct != null) {
+                        RetrofitClient.instance.getListProducts().enqueue(object : Callback<List<Product>> {
+                            override fun onResponse(call: Call<List<Product>>, res: Response<List<Product>>) {
+                                if (res.isSuccessful) {
+                                    val allProducts = res.body() ?: emptyList()
+
+                                    relatedProducts = allProducts.filter { item ->
+                                        item.id != currentProduct.id && item.category == currentProduct.category
+                                    }
+                                        .sortedBy { abs(it.price - currentProduct.price) }
+                                        .take(4)
+                                }
+                            }
+                            override fun onFailure(call: Call<List<Product>>, t: Throwable) {
+                            }
+                        })
+                    }
                 }
                 isLoading = false
             }
@@ -55,17 +75,6 @@ fun ProductDetailScreen(
                 Log.e("ProductDetail", "Error: ${t.message}")
                 isLoading = false
             }
-        })
-
-        RetrofitClient.instance.getListProducts().enqueue(object : Callback<List<Product>> {
-            override fun onResponse(call: Call<List<Product>>, response: Response<List<Product>>) {
-                if (response.isSuccessful) {
-                    relatedProducts = response.body()
-                        ?.filter { it.id != productId }
-                        ?.take(4) ?: emptyList()
-                }
-            }
-            override fun onFailure(call: Call<List<Product>>, t: Throwable) { }
         })
     }
 

@@ -16,7 +16,7 @@ import com.example.techz.ui.screens.product.ProductListScreen
 fun AppNavGraph() {
     val navController = rememberNavController()
 
-    NavHost(navController = navController, startDestination = Screen.Login.route) {
+    NavHost(navController = navController, startDestination = Screen.Home.route) {
 
         composable(Screen.Login.route) {
             LoginScreen(onLoginSuccess = {
