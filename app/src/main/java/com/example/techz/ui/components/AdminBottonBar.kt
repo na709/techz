@@ -1,4 +1,5 @@
 package com.example.techz.ui.components
+
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.List
@@ -20,60 +21,71 @@ import com.example.techz.ui.navigation.Screen
 @Composable
 fun TechZBottomBarFull(navController: NavHostController) {
     NavigationBar(
-        containerColor = Color(0xFFEEEEEE), // Màu nền xám nhạt cho thanh bar
+        containerColor = Color(0xFFEEEEEE),
         tonalElevation = 8.dp
     ) {
-        // Item 1: Trang chủ
+        // --- 1. NÚT TRANG CHỦ (HOME) ---
         NavigationBarItem(
             icon = { Icon(Icons.Filled.Home, contentDescription = "Home") },
             label = { Text("Trang chủ", fontSize = 10.sp) },
             selected = false,
-            onClick = { navController.navigate(Screen.Home.route) {
-                popUpTo(Screen.Home.route) { inclusive = true }
-                launchSingleTop = true
-            }
-                      },
+            onClick = {
+                // Chuyển sang màn hình Home
+                navController.navigate(Screen.Home.route) {
+                    // Xóa backstack để tránh bị chồng màn hình
+                    popUpTo(Screen.Home.route) { inclusive = true }
+                }
+            },
             colors = NavigationBarItemDefaults.colors(
                 unselectedIconColor = Color.Gray,
                 unselectedTextColor = Color.Gray
             )
         )
-        // Item 2: Sản phẩm
+
+        // --- 2. NÚT SẢN PHẨM (PRODUCT LIST) ---
         NavigationBarItem(
             icon = { Icon(Icons.Filled.List, contentDescription = "Product") },
             label = { Text("Sản phẩm", fontSize = 10.sp) },
             selected = false,
-            onClick = { navController.navigate(Screen.ProductList.route) {
-                popUpTo(Screen.Home.route)
-                launchSingleTop = true
-            }
-                      },
+            onClick = {
+                // Chuyển sang màn hình ProductListScreen
+                navController.navigate(Screen.ProductList.route) {
+                    launchSingleTop = true
+                }
+            },
             colors = NavigationBarItemDefaults.colors(
                 unselectedIconColor = Color.Gray,
                 unselectedTextColor = Color.Gray
             )
         )
-        // Item 3: Tài khoản
+
+        // --- 3. NÚT TÀI KHOẢN (ACCOUNT) ---
         NavigationBarItem(
             icon = { Icon(Icons.Filled.Person, contentDescription = "Account") },
             label = { Text("Tài khoản", fontSize = 10.sp) },
             selected = false,
-            onClick = { /* Nav to Account */ },
+            onClick = {
+                // Nếu bạn có màn hình Account thì thêm vào đây:
+                // navController.navigate(Screen.Account.route)
+            },
             colors = NavigationBarItemDefaults.colors(
                 unselectedIconColor = Color.Gray,
                 unselectedTextColor = Color.Gray
             )
         )
-        // Item 4: DASHBOARD (ĐANG ĐƯỢC CHỌN - MÀU XANH)
+
+        // --- 4. NÚT DASHBOARD (ADMIN - ĐANG CHỌN) ---
         NavigationBarItem(
-            icon = { Icon(Icons.Filled.Settings, contentDescription = "Dashboard") }, // Icon bánh răng/Dashboard
+            icon = { Icon(Icons.Filled.Settings, contentDescription = "Dashboard") },
             label = { Text("Dashboard", fontSize = 10.sp, fontWeight = FontWeight.Bold) },
-            selected = true, // Đang ở màn hình này nên set true
-            onClick = { /* Do nothing */ },
+            selected = true, // Vì đang ở Dashboard nên để true
+            onClick = {
+                // Đang ở đây rồi thì không làm gì hoặc load lại
+            },
             colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = Color(0xFF03A9F4), // Màu icon khi chọn (Xanh)
-                selectedTextColor = Color(0xFF03A9F4), // Màu chữ khi chọn
-                indicatorColor = Color.White // Màu nền tròn sau icon
+                selectedIconColor = Color(0xFF03A9F4),
+                selectedTextColor = Color(0xFF03A9F4),
+                indicatorColor = Color.White
             )
         )
     }

@@ -60,7 +60,7 @@ fun AdminOrderScreen(navController: NavHostController) {
             TopAppBar(
                 title = { Text("Quản Lý Đơn Hàng", fontWeight = FontWeight.Bold, color = Color.White) },
                 actions = {
-                    IconButton(onClick = {navController.navigate(Screen.Home.route) {
+                    IconButton(onClick = {navController.navigate(Screen.AdminDashboard.route) {
 
                         popUpTo(0) { inclusive = true }
                             }

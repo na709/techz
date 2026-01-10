@@ -87,8 +87,6 @@ fun AppNavGraph() {
         composable(Screen.AdminOrder.route) {
             AdminOrderScreen(navController = navController)
         }
-        composable(Screen.Home.route) {
-            AdminOrderScreen(navController = navController)
-        }
+
     }
 }
