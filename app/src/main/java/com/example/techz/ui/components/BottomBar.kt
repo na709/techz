@@ -70,8 +70,13 @@ fun TechZBottomBar(
         NavigationBarItem(
             icon = { Icon(Icons.Default.Person, contentDescription = "Tài khoản") },
             label = { Text(text = accountLabel) },
-            selected = false, // Chưa làm
-            onClick = { /* TODO */ },
+            selected = currentRoute == Screen.Account.route,
+            onClick = {
+                navController.navigate(Screen.Account.route) {
+                    popUpTo(Screen.Home.route)
+                    launchSingleTop = true
+                }
+            },
             colors = NavigationBarItemDefaults.colors(selectedIconColor = Color.Gray)
         )
     }

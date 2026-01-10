@@ -5,6 +5,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.techz.ui.screens.account.AccountScreen
 import com.example.techz.ui.screens.cart.CartScreen
 import com.example.techz.ui.screens.home.HomeScreen
 import com.example.techz.ui.screens.login.LoginScreen
@@ -17,7 +18,7 @@ import com.example.techz.ui.screens.register.RegisterScreen
 fun AppNavGraph() {
     val navController = rememberNavController()
 
-    NavHost(navController = navController, startDestination = Screen.Login.route) {
+    NavHost(navController = navController, startDestination = Screen.Home.route) {
 
         composable(Screen.Login.route) {
             LoginScreen(
@@ -29,6 +30,15 @@ fun AppNavGraph() {
                     {
                         navController.navigate(Screen.Register.route) { popUpTo(Screen.Login.route) { inclusive = true } }
                     }
+
+            )
+        }
+        composable(Screen.Account.route) {
+            AccountScreen(
+                //navController = navController,
+                onGoToLogin = { navController.navigate(Screen.Login.route) },
+                onLogout = { navController.navigate(Screen.Home.route) },
+                onGoToRegister = { navController.navigate(Screen.Register.route) }
 
             )
         }
