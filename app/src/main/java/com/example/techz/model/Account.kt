@@ -3,14 +3,18 @@ package com.example.techz.model
 import com.google.gson.annotations.SerializedName
 
 
-
-// 1. Model cho User (Object con bên trong response)
+data class RegisterRequest(
+    val name: String,
+    val email: String,
+    val username: String,
+    val password: String
+)
+// 1. User (Object con bên trong response)
 data class User(
     @SerializedName("id") val id: Int,
     @SerializedName("username") val username: String,
     @SerializedName("name") val name: String?,
     @SerializedName("email") val email: String?,
-    @SerializedName("role") val role: Int // 0: Toàn quyền, 1: Quản lý
 )
 
 // 2. Model chung cho Response (Vì cả Login và Register đều trả về cấu trúc giống nhau)

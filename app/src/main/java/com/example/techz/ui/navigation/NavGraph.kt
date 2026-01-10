@@ -19,13 +19,21 @@ import com.example.techz.ui.screens.product.ProductListScreen
 fun AppNavGraph() {
     val navController = rememberNavController()
 
-    NavHost(navController = navController, startDestination = Screen.AdminDashboard.route) {
+    NavHost(navController = navController, startDestination = Screen.Login.route) {
 
         composable(Screen.Login.route) {
-            LoginScreen(onLoginSuccess = {
-                navController.navigate(Screen.AdminDashboard.route) { popUpTo(Screen.Login.route) { inclusive = true }
+            LoginScreen(
+                onLoginSuccess = {
+
+                    navController.navigate(Screen.AdminDashboard.route) {
+                        popUpTo(Screen.Login.route) { inclusive = true }
+                    }
+                },
+                onClickRegister = {
+                    // Xử lý khi bấm nút Đăng ký (nếu chưa có thì để trống hoặc Toast thông báo)
+                    // Ví dụ: navController.navigate("register")
                 }
-            })
+            )
         }
 
         composable(Screen.Home.route) {
@@ -34,6 +42,9 @@ fun AppNavGraph() {
                 onProductClick = { productId ->
                     navController.navigate("detail/$productId")
                 },
+                onCategoryClick = { category ->
+                    navController.navigate("${Screen.ProductList.route}?category=$category")
+                                  },
                 onGoToCart = { navController.navigate(Screen.Cart.route) },
                 onViewAll = { navController.navigate(Screen.ProductList.route) }
             )
@@ -66,7 +77,8 @@ fun AppNavGraph() {
             ProductDetailScreen(
                 productId = productId,
                 onAddToCart = { navController.navigate(Screen.Cart.route) },
-                onBack = { navController.popBackStack() }
+                onBack = { navController.popBackStack() },
+                onProductClick = { id -> navController.navigate("detail/$id") }
             )
         }
 
@@ -76,17 +88,23 @@ fun AppNavGraph() {
                 onBack = { navController.popBackStack() }
             )
         }
+
         composable(Screen.AdminDashboard.route) {
             AdminDashboardScreen(
                 navController = navController,
-                onLogout = { navController.navigate(Screen.Login.route) { popUpTo(0) { inclusive = true }
+                onLogout = {
+                    // Xử lý đăng xuất: Quay về Login
+                    navController.navigate(Screen.Login.route) {
+                        popUpTo(0) { inclusive = true }
                     }
                 }
             )
         }
+
+        // Đã sửa lỗi ở đây: Xóa dấu } thừa, đưa AdminOrder vào cùng hàng với các composable khác
         composable(Screen.AdminOrder.route) {
             AdminOrderScreen(navController = navController)
         }
 
-    }
-}
+    } // Kết thúc NavHost
+} // Kết thúc hàm AppNavGraph
