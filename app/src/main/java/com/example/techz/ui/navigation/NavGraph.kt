@@ -6,23 +6,24 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.example.techz.ui.screens.account.AccountScreen
+import com.example.techz.ui.screens.admin.AdminDashboardScreen
+import com.example.techz.ui.screens.admin.AdminOrderScreen
 import com.example.techz.ui.screens.cart.CartScreen
 import com.example.techz.ui.screens.home.HomeScreen
 import com.example.techz.ui.screens.login.LoginScreen
 import com.example.techz.ui.screens.payment.PaymentScreen
 import com.example.techz.ui.screens.product.ProductDetailScreen
 import com.example.techz.ui.screens.product.ProductListScreen
-import com.example.techz.ui.screens.register.RegisterScreen
 
 @Composable
 fun AppNavGraph() {
     val navController = rememberNavController()
 
-    NavHost(navController = navController, startDestination = Screen.Home.route) {
+    NavHost(navController = navController, startDestination = Screen.Login.route) {
 
         composable(Screen.Login.route) {
             LoginScreen(
+
                 onLoginSuccess = { role ->
                         if (role == "admin")
                         {
@@ -30,22 +31,13 @@ fun AppNavGraph() {
                         }else{
                             navController.navigate(Screen.Home.route) { popUpTo(Screen.Login.route) { inclusive = true } }
                         }
-
                     },
                 onClickRegister =
                     {
                         navController.navigate(Screen.Register.route) { popUpTo(Screen.Login.route) { inclusive = true } }
+
+
                     }
-
-            )
-        }
-        composable(Screen.Account.route) {
-            AccountScreen(
-                //navController = navController,
-                onGoToLogin = { navController.navigate(Screen.Login.route) },
-                onLogout = { navController.navigate(Screen.Home.route) },
-                onGoToRegister = { navController.navigate(Screen.Register.route) }
-
             )
         }
 
@@ -55,6 +47,9 @@ fun AppNavGraph() {
                 onProductClick = { productId ->
                     navController.navigate("detail/$productId")
                 },
+                onCategoryClick = { category ->
+                    navController.navigate("${Screen.ProductList.route}?category=$category")
+                                  },
                 onGoToCart = { navController.navigate(Screen.Cart.route) },
                 onViewAll = { navController.navigate(Screen.ProductList.route) }
             )
@@ -75,14 +70,6 @@ fun AppNavGraph() {
                 onBack = { navController.popBackStack() }
             )
         }
-        composable(Screen.Register.route) {
-            RegisterScreen(onRegister = {
-                navController.navigate(Screen.Home.route) { popUpTo(Screen.Register.route) { inclusive = true } }
-            },
-                onNavigateToLogin = {
-                    navController.navigate(Screen.Login.route) { popUpTo(Screen.Register.route) { inclusive = true } }
-                })
-        }
 
         composable(
             route = "detail/{id}",
@@ -95,7 +82,8 @@ fun AppNavGraph() {
             ProductDetailScreen(
                 productId = productId,
                 onAddToCart = { navController.navigate(Screen.Cart.route) },
-                onBack = { navController.popBackStack() }
+                onBack = { navController.popBackStack() },
+                onProductClick = { id -> navController.navigate("detail/$id") }
             )
         }
 
@@ -105,5 +93,21 @@ fun AppNavGraph() {
                 onBack = { navController.popBackStack() }
             )
         }
+
+        composable(Screen.AdminDashboard.route) {
+            AdminDashboardScreen(
+                navController = navController,
+                onLogout = {
+                    // Xử lý đăng xuất: Quay về Login
+                    navController.navigate(Screen.Login.route) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                }
+            )
+        }
+        composable(Screen.AdminOrder.route) {
+            AdminOrderScreen(navController = navController)
+        }
+
     }
 }

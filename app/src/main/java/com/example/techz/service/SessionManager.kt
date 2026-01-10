@@ -13,8 +13,12 @@ object UserSession {
     var currentUserId by mutableStateOf<Int?>(null)
         private set
 
+<<<<<<< HEAD
 
     fun login(context: Context, name: String,role: String) {
+=======
+    fun login(context: Context, name: String) {
+>>>>>>> 090d5ede692724b264fc3481132fb3fbaa7617aa
         currentUserName = name
         currentUserRole= role
 

@@ -11,4 +11,7 @@ sealed class Screen(val route: String) {
     object Detail : Screen("detail/{id}") {
         fun passId(id: String) = "detail/$id"
     }
+    object AdminDashboard : Screen("admin_dashboard")
+    object AdminOrder: Screen("admin_order")
+
 }

@@ -4,7 +4,6 @@ import com.example.techz.model.AuthResponse
 import com.example.techz.model.CreateManagerRequest
 import com.example.techz.model.LoginRequest
 import com.example.techz.model.Product
-import com.example.techz.model.RegisterRequest
 import retrofit2.Call
 import retrofit2.http.GET
 import retrofit2.Retrofit
@@ -15,19 +14,17 @@ import retrofit2.http.Path
 
 interface ApiService {
 
-    @POST ("api/register")
-    fun registerUser(@Body request: RegisterRequest): Call<AuthResponse>
     @POST("api/login")
     fun loginUser(@Body request: LoginRequest): Call<AuthResponse>
-
-    /*// Endpoint: http://localhost:3000/api/v2/login
+    // API 1: Đăng nhập Admin
+    // Endpoint: http://localhost:3000/api/v2/login
     @POST("api/v2/login")
     fun loginAdmin(@Body request: LoginRequest): Call<AuthResponse>
 
     // API 2: Tạo tài khoản Quản lý (Chỉ dành cho Super Admin)
     // Endpoint: http://localhost:3000/api/v2/register
     @POST("api/v2/register")
-    fun createManager(@Body request: CreateManagerRequest): Call<AuthResponse>*/
+    fun createManager(@Body request: CreateManagerRequest): Call<AuthResponse>
 
     // get list products
     @GET("api/products")
@@ -39,14 +36,7 @@ interface ApiService {
 }
 
 object RetrofitClient {
-    //api server
-    //private const val BASE_URL = "http://160.250.247.5:4567/"
-    //api server
-    private const val BASE_URL = "https://dvna.site/"
-    //api test
-    //private const val BASE_URL = "http://103.82.38.62:3000/"
-    //api local
-
+    private const val BASE_URL = "http://160.250.247.5:4567/"
     //private const val BASE_URL = "http://10.0.2.2:3000/"
     val instance: ApiService by lazy {
         val retrofit = Retrofit.Builder()

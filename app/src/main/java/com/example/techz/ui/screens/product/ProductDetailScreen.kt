@@ -1,11 +1,11 @@
 package com.example.techz.ui.screens.product
 
-
 import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
@@ -23,6 +23,7 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.techz.model.Product
 import com.example.techz.service.RetrofitClient
+import com.example.techz.ui.components.ProductItem
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -31,11 +32,18 @@ import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ProductDetailScreen(productId: Int, onAddToCart: () -> Unit, onBack: () -> Unit) {
+fun ProductDetailScreen(
+    productId: Int,
+    onAddToCart: () -> Unit,
+    onBack: () -> Unit,
+    onProductClick: (Int) -> Unit
+) {
     var product by remember { mutableStateOf<Product?>(null) }
+    var relatedProducts by remember { mutableStateOf<List<Product>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
 
     LaunchedEffect(productId) {
+        isLoading = true
         RetrofitClient.instance.getProductDetail(productId).enqueue(object : Callback<Product> {
             override fun onResponse(call: Call<Product>, response: Response<Product>) {
                 if (response.isSuccessful) {
@@ -43,11 +51,21 @@ fun ProductDetailScreen(productId: Int, onAddToCart: () -> Unit, onBack: () -> U
                 }
                 isLoading = false
             }
-
             override fun onFailure(call: Call<Product>, t: Throwable) {
-                Log.e("ProductDetail", "Lỗi: ${t.message}")
+                Log.e("ProductDetail", "Error: ${t.message}")
                 isLoading = false
             }
+        })
+
+        RetrofitClient.instance.getListProducts().enqueue(object : Callback<List<Product>> {
+            override fun onResponse(call: Call<List<Product>>, response: Response<List<Product>>) {
+                if (response.isSuccessful) {
+                    relatedProducts = response.body()
+                        ?.filter { it.id != productId }
+                        ?.take(4) ?: emptyList()
+                }
+            }
+            override fun onFailure(call: Call<List<Product>>, t: Throwable) { }
         })
     }
 
@@ -71,19 +89,15 @@ fun ProductDetailScreen(productId: Int, onAddToCart: () -> Unit, onBack: () -> U
         },
         bottomBar = {
             if (product != null) {
-                Surface(
-
-                    shadowElevation = 8.dp
-                ) {
-                    PaddingValues(16.dp)
+                Surface(shadowElevation = 16.dp) {
                     Button(
                         onClick = onAddToCart,
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(16.dp)
                             .height(50.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0066FF)),
-                        shape = MaterialTheme.shapes.medium
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00A9FF)),
+                        shape = RoundedCornerShape(8.dp)
                     ) {
                         Text("THÊM VÀO GIỎ HÀNG", fontSize = 16.sp, fontWeight = FontWeight.Bold)
                     }
@@ -95,16 +109,13 @@ fun ProductDetailScreen(productId: Int, onAddToCart: () -> Unit, onBack: () -> U
             if (isLoading) {
                 CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
             } else if (product == null) {
-                Text(
-                    text = "Không tìm thấy sản phẩm!",
-                    modifier = Modifier.align(Alignment.Center),
-                    color = Color.Gray
-                )
+                Text("Không tìm thấy sản phẩm!", modifier = Modifier.align(Alignment.Center))
             } else {
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
                         .verticalScroll(rememberScrollState())
+                        .background(Color(0xFFF5F5F5))
                 ) {
                     AsyncImage(
                         model = ImageRequest.Builder(LocalContext.current)
@@ -119,41 +130,74 @@ fun ProductDetailScreen(productId: Int, onAddToCart: () -> Unit, onBack: () -> U
                         contentScale = ContentScale.Fit
                     )
 
-                    Column(Modifier.padding(16.dp)) {
+                    Column(
+                        Modifier
+                            .padding(top = 8.dp)
+                            .background(Color.White)
+                            .padding(16.dp)
+                            .fillMaxWidth()
+                    ) {
                         Text(
                             text = product!!.name,
-                            fontSize = 24.sp,
-                            fontWeight = FontWeight.Bold,
-                            lineHeight = 32.sp
+                            fontSize = 22.sp,
+                            fontWeight = FontWeight.Bold
                         )
-
                         Spacer(Modifier.height(8.dp))
 
                         val formattedPrice = NumberFormat.getCurrencyInstance(Locale("vi", "VN")).format(product!!.price)
                         Text(
                             text = formattedPrice,
-                            fontSize = 22.sp,
+                            fontSize = 24.sp,
                             color = Color(0xFFD32F2F),
-                            fontWeight = FontWeight.SemiBold
+                            fontWeight = FontWeight.Bold
                         )
+                    }
 
-                        Spacer(Modifier.height(16.dp))
-                        Divider(color = Color.LightGray, thickness = 1.dp)
-                        Spacer(Modifier.height(16.dp))
+                    Spacer(Modifier.height(8.dp))
 
-                        Text(
-                            text = "Mô tả sản phẩm:",
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.SemiBold
-                        )
+                    Column(
+                        Modifier
+                            .background(Color.White)
+                            .padding(16.dp)
+                            .fillMaxWidth()
+                    ) {
+                        Text("Mô tả sản phẩm", fontSize = 18.sp, fontWeight = FontWeight.Bold)
                         Spacer(Modifier.height(8.dp))
                         Text(
                             text = product!!.description ?: "Đang cập nhật...",
-                            fontSize = 16.sp,
+                            fontSize = 15.sp,
                             color = Color.DarkGray,
-                            lineHeight = 24.sp
+                            lineHeight = 22.sp
                         )
-                        Spacer(Modifier.height(80.dp))
+                    }
+
+                    Spacer(Modifier.height(8.dp))
+
+                    if (relatedProducts.isNotEmpty()) {
+                        Column(modifier = Modifier.padding(bottom = 16.dp)) {
+                            Text(
+                                text = "Sản phẩm liên quan",
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(16.dp)
+                            )
+                            val rows = relatedProducts.chunked(2)
+                            rows.forEach { rowItems ->
+                                Row(
+                                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                ) {
+                                    for (item in rowItems) {
+                                        Box(modifier = Modifier.weight(1f)) {
+                                            ProductItem(product = item, onClick = onProductClick)
+                                        }
+                                    }
+                                    if (rowItems.size == 1) {
+                                        Spacer(modifier = Modifier.weight(1f))
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }

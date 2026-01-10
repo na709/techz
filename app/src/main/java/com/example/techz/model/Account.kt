@@ -9,7 +9,7 @@ data class RegisterRequest(
     val username: String,
     val password: String
 )
-// 1. User (Object con bên trong response)
+
 data class User(
     @SerializedName("id") val id: Int,
     @SerializedName("username") val username: String,
@@ -22,7 +22,7 @@ data class AuthResponse(
     @SerializedName("success") val success: Boolean,
     @SerializedName("message") val message: String,
     @SerializedName("role") val role: String,
-    @SerializedName("user") val user: User? // Có thể null nếu thất bại
+    @SerializedName("user") val user: User? // Có thể null
 )
 
 // 3. Body gửi lên khi Login
@@ -33,9 +33,11 @@ data class LoginRequest(
 
 // 4. Body gửi lên khi Tạo tài khoản Quản lý (Register)
 data class CreateManagerRequest(
-    @SerializedName("current_admin_id") val currentAdminId: Int, // ID admin hiện tại
+    @SerializedName("current_admin_id") val currentAdminId: Int,
     @SerializedName("username") val username: String,
     @SerializedName("password") val password: String,
     @SerializedName("name") val name: String,
     @SerializedName("email") val email: String
 )
+//5.Model cho Admin
+

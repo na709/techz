@@ -1,8 +1,6 @@
 package com.example.techz.ui.screens.home
-import com.example.techz.ui.screens.product.CATEGORIES
+
 import android.util.Log
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import android.content.Context
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -10,10 +8,6 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Computer
-import androidx.compose.material.icons.filled.Devices
-import androidx.compose.material.icons.filled.Headphones
-import androidx.compose.material.icons.filled.Keyboard
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -36,22 +30,13 @@ import com.example.techz.ui.components.TechZBottomBar
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
-@Composable//new
-fun getCategoryIcon(category: String): androidx.compose.ui.graphics.vector.ImageVector {
-    return when (category) {
-        "Laptop", "PC" -> Icons.Default.Computer
-        "Chuot", "BanPhim" -> Icons.Default.Keyboard
-        "TaiNghe" -> Icons.Default.Headphones
-        else -> Icons.Default.Devices
-    }
-}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(
+fun AdminHomeScreen(
     navController: NavHostController,
     onProductClick: (Int) -> Unit,
     onGoToCart: () -> Unit,
-    onCategoryClick: (String) -> Unit,
     onViewAll: () -> Unit
 ) {
     val context = LocalContext.current
@@ -105,33 +90,18 @@ fun HomeScreen(
                 item {
                     AsyncImage(
                         model = ImageRequest.Builder(LocalContext.current)
-                            .data("https://dvna.site/images/banner-sales.jpg")
-                            //.data("http://160.250.247.5/images/banner-sales.jpg")
+                            .data("http://160.250.247.5/images/banner-sales.jpg")
                             .crossfade(true)
                             .build(),
                         contentDescription = "Banner Sales",
                         modifier = Modifier
-                            .fillMaxWidth(1f)
                             .fillMaxWidth()
                             .height(400.dp)
                             .padding(bottom = 16.dp)
                             .clip(RoundedCornerShape(24.dp)),
                         contentScale = ContentScale.Fit
                     )
-                    Spacer(Modifier.height(16.dp))
-                }
-                item {
-                    Text("Danh mục", fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                    Spacer(Modifier.height(8.dp))
-
-                    LazyRow(
-                        horizontalArrangement = Arrangement.spacedBy(16.dp),
-                        contentPadding = PaddingValues(bottom = 16.dp)
-                    ) {
-                        items(CATEGORIES) { category ->
-                            CategoryItem(category = category, onClick = { onCategoryClick(category) })
-                        }
-                    }
+                    Spacer(Modifier.height(24.dp))
                 }
 
                 item {
@@ -155,38 +125,5 @@ fun HomeScreen(
                 }
             }
         }
-    }
-}
-@Composable//new
-fun CategoryItem(category: String, onClick: () -> Unit) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier
-            .clickable { onClick() }
-            .width(70.dp)
-    ) {
-        Box(
-            modifier = Modifier
-                .size(60.dp)
-                .clip(RoundedCornerShape(12.dp))
-                .background(Color(0xFFE3F2FD)), // Màu nền nhẹ
-            contentAlignment = Alignment.Center
-        ) {
-            // Ở đây dùng Icon tạm, nếu có ảnh từ API thì dùng AsyncImage
-            Icon(
-                imageVector = getCategoryIcon(category),
-                contentDescription = category,
-                tint = Color(0xFF0066FF),
-                modifier = Modifier.size(32.dp)
-            )
-        }
-        Spacer(Modifier.height(4.dp))
-        Text(
-            text = category,
-            fontSize = 12.sp,
-            fontWeight = FontWeight.Medium,
-            maxLines = 1,
-            color = Color.Black
-        )
     }
 }
