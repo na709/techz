@@ -73,7 +73,7 @@ fun AdminHomeScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFF0066FF),
+                    containerColor = Color(0xFF00A9FF),
                     titleContentColor = Color.White,
                     actionIconContentColor = Color.White
                 )

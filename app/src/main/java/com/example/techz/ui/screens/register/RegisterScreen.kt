@@ -44,7 +44,7 @@ fun RegisterScreen(
 
     //val logoUrl = "http://160.250.247.5/images/logo.jpg"
     val logoUrl = "https://dvna.site/images/logo.jpg"
-    val brandColor = Color(0xFF0066FF)
+    val brandColor = Color(0xFF00A9FF)
 
     fun handleRegister() {
         if (name.isBlank() || email.isBlank() || username.isBlank() || password.isBlank()) {
@@ -65,8 +65,9 @@ fun RegisterScreen(
                 isLoading = false
                 if (response.isSuccessful && response.body()?.success == true) {
                     val user = response.body()?.user
-                    user?.name?.let {
-                        UserSession.login(context,it)
+                    val role = response.body()?.role ?:"user"
+                    user?.let {
+                        UserSession.login(context,it,role)
                     }
                     Toast.makeText(context, "Đăng ký thành công!", Toast.LENGTH_LONG).show()
                     onRegister()

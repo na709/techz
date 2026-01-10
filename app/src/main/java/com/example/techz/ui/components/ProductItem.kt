@@ -71,7 +71,7 @@ fun ProductItem(product: Product, onClick: (Int) -> Unit) {
                     onClick = { onClick(product.id) },
                     modifier = Modifier.fillMaxWidth().height(36.dp),
                     contentPadding = PaddingValues(0.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0066FF)),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00A9FF)),
                     shape = RoundedCornerShape(8.dp)
                 ) {
                     Text("Xem chi tiết", fontSize = 12.sp)

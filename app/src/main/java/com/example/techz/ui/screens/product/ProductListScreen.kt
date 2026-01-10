@@ -36,7 +36,7 @@ import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 
-// --- 1. Danh sách loại linh kiện (Hardcode theo API) ---
+// --- 1. Danh sách loại linh kiện (theo API) ---
 val CATEGORIES = listOf(
     "ThietBiMang", "RAM", "VGA", "Ghe", "Case",
     "Nguon","TanNhiet", "Micro", "Webcam", "TaiNghe","Chuot",
@@ -45,14 +45,12 @@ val CATEGORIES = listOf(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-
 fun ProductListScreen(navController: NavHostController,initialCategory: String? = null, onProductClick: (Int) -> Unit) { // Sửa String -> Int
-    var originalList by remember { mutableStateOf<List<Product>>(emptyList()) }
     val context = LocalContext.current
+    var originalList by remember { mutableStateOf<List<Product>>(emptyList()) }
     var currentName by remember { mutableStateOf<String?>(null) }
     var productList by remember { mutableStateOf<List<Product>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
-
     var searchQuery by remember { mutableStateOf("") }
     var showFilterSheet by remember { mutableStateOf(false) }
 
@@ -116,6 +114,7 @@ fun ProductListScreen(navController: NavHostController,initialCategory: String? 
                     .fillMaxWidth()
                     .background(Color(0xFF00A9FF))
                     .padding(16.dp)
+                    .statusBarsPadding() // đẩy nội dung xuống dưới tránh thanh trạng thái
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),

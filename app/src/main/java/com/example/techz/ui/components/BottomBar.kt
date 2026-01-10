@@ -22,8 +22,17 @@ fun TechZBottomBar(
 ) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
-    val brandColor = Color(0xFF0066FF)
+    val brandColor = Color(0xFF00A9FF)
+    val lightBrandColor = Color(0xFFE6F5FF)
     val userName = UserSession.currentUserName
+    val isLoggedIn = UserSession.isLoggedIn
+    val navigationItemColors = NavigationBarItemDefaults.colors(
+        selectedIconColor = brandColor,
+        selectedTextColor = brandColor,
+        indicatorColor = lightBrandColor,
+        unselectedIconColor = Color.Gray,
+        unselectedTextColor = Color.Gray
+    )
 
     val accountLabel = if (!userName.isNullOrBlank()) {
         val shortName = userName.trim().substringAfterLast(" ")
@@ -43,28 +52,20 @@ fun TechZBottomBar(
                     launchSingleTop = true
                 }
             },
-            colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = Color(0xFF0066FF),
-                selectedTextColor = Color(0xFF0066FF),
-                indicatorColor = Color(0xFFE6F0FF)
-            )
+            colors = navigationItemColors
         )
 
         NavigationBarItem(
             icon = { Icon(Icons.Default.List, contentDescription = "Sản phẩm") },
             label = { Text("Sản phẩm") },
-            selected = currentRoute == Screen.ProductList.route,
+            selected = currentRoute?.startsWith(Screen.ProductList.route) == true,
             onClick = {
                 navController.navigate(Screen.ProductList.route) {
                     popUpTo(Screen.Home.route)
                     launchSingleTop = true
                 }
             },
-            colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = Color(0xFF0066FF),
-                selectedTextColor = Color(0xFF0066FF),
-                indicatorColor = Color(0xFFE6F0FF)
-            )
+            colors = navigationItemColors
         )
 
         NavigationBarItem(
@@ -72,12 +73,13 @@ fun TechZBottomBar(
             label = { Text(text = accountLabel) },
             selected = currentRoute == Screen.Account.route,
             onClick = {
+
                 navController.navigate(Screen.Account.route) {
                     popUpTo(Screen.Home.route)
                     launchSingleTop = true
                 }
             },
-            colors = NavigationBarItemDefaults.colors(selectedIconColor = Color.Gray)
+            colors = navigationItemColors
         )
     }
 }

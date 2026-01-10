@@ -16,8 +16,12 @@ data class Product(
     @SerializedName("gia")
     val price: Double,
 
+/*  //khi dùng api : dvna.site thì bỏ commnet
     @SerializedName("hinh_anh_full")
+    val image: String?,*/
+    @SerializedName("hinh_anh")
     val image: String?,
+
 
     @SerializedName("mo_ta")
     val description: String?,

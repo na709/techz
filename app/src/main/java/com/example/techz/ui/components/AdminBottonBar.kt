@@ -24,7 +24,7 @@ fun TechZBottomBarFull(navController: NavHostController) {
         containerColor = Color(0xFFEEEEEE),
         tonalElevation = 8.dp
     ) {
-        // --- 1. NÚT TRANG CHỦ (HOME) ---
+        /*// --- 1. NÚT TRANG CHỦ (HOME) ---
         NavigationBarItem(
             icon = { Icon(Icons.Filled.Home, contentDescription = "Home") },
             label = { Text("Trang chủ", fontSize = 10.sp) },
@@ -72,7 +72,7 @@ fun TechZBottomBarFull(navController: NavHostController) {
                 unselectedIconColor = Color.Gray,
                 unselectedTextColor = Color.Gray
             )
-        )
+        )*/
 
         // --- 4. NÚT DASHBOARD (ADMIN - ĐANG CHỌN) ---
         NavigationBarItem(

@@ -31,6 +31,7 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.techz.model.Product
 import com.example.techz.service.RetrofitClient
+import com.example.techz.ui.components.BannerScroll
 import com.example.techz.ui.components.ProductItem
 import com.example.techz.ui.components.TechZBottomBar
 import retrofit2.Call
@@ -51,13 +52,19 @@ fun HomeScreen(
     navController: NavHostController,
     onProductClick: (Int) -> Unit,
     onGoToCart: () -> Unit,
-    onCategoryClick: (String) -> Unit,
-    onViewAll: () -> Unit
+    onViewAll: () -> Unit,
+    onCategoryClick: (String) -> Unit
 ) {
     val context = LocalContext.current
     var currentName by remember { mutableStateOf<String?>(null) }
     var productList by remember { mutableStateOf<List<Product>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
+    val bannerList = listOf(
+        "https://s3.cloudfly.vn/techz-product-images1/banner/banner1.png",
+        "https://s3.cloudfly.vn/techz-product-images1/banner/banner2.png",
+        "https://s3.cloudfly.vn/techz-product-images1/banner/banner3.png",
+        "https://s3.cloudfly.vn/techz-product-images1/banner/banner4.png"
+    )
 
     LaunchedEffect(Unit) {
         val sharedPref = context.getSharedPreferences("MY_APP_PREF", Context.MODE_PRIVATE)
@@ -88,7 +95,7 @@ fun HomeScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFF0066FF),
+                    containerColor = Color(0xFF00A9FF),
                     titleContentColor = Color.White,
                     actionIconContentColor = Color.White
                 )
@@ -103,20 +110,23 @@ fun HomeScreen(
         } else {
             LazyColumn(modifier = Modifier.padding(padding).padding(16.dp)) {
                 item {
-                    AsyncImage(
+                    /*AsyncImage(
                         model = ImageRequest.Builder(LocalContext.current)
-                            .data("https://dvna.site/images/banner-sales.jpg")
-                            //.data("http://160.250.247.5/images/banner-sales.jpg")
+                            .data("http://160.250.247.5/images/banner-sales.jpg")
                             .crossfade(true)
                             .build(),
                         contentDescription = "Banner Sales",
                         modifier = Modifier
-                            .fillMaxWidth(1f)
                             .fillMaxWidth()
-                            .height(400.dp)
-                            .padding(bottom = 16.dp)
+                            .fillMaxWidth()
+                            .height(250.dp)
+                            .padding(bottom = 12.dp)
                             .clip(RoundedCornerShape(24.dp)),
-                        contentScale = ContentScale.Fit
+                        contentScale = ContentScale.Crop
+                    )*/
+                    BannerScroll(
+                        bannerUrls = bannerList,
+                        modifier = Modifier.padding(vertical = 16.dp)
                     )
                     Spacer(Modifier.height(16.dp))
                 }
@@ -172,11 +182,11 @@ fun CategoryItem(category: String, onClick: () -> Unit) {
                 .background(Color(0xFFE3F2FD)), // Màu nền nhẹ
             contentAlignment = Alignment.Center
         ) {
-            // Ở đây dùng Icon tạm, nếu có ảnh từ API thì dùng AsyncImage
+
             Icon(
                 imageVector = getCategoryIcon(category),
                 contentDescription = category,
-                tint = Color(0xFF0066FF),
+                tint = Color(0xFF00A9FF),
                 modifier = Modifier.size(32.dp)
             )
         }

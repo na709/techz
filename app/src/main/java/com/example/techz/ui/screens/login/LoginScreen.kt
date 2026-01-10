@@ -35,7 +35,7 @@ fun LoginScreen(onLoginSuccess: (String) -> Unit,
 
     //val logoUrl = "http://160.250.247.5/images/logo.jpg"
     val logoUrl = "https://dvna.site/images/logo.jpg"
-    val brandColor = Color(0xFF0066FF)
+    val brandColor = Color(0xFF00A9FF)
 
 
     fun handleLogin() {
@@ -52,7 +52,7 @@ fun LoginScreen(onLoginSuccess: (String) -> Unit,
                     val authData = response.body()
                     val user = authData?.user
                     val role = authData?.role ?:"user"
-                    user?.name?.let {
+                    user?.let {
                         UserSession.login(context, it,role)
                     }
                     Toast.makeText(context, "Xin chào ${user?.name}!", Toast.LENGTH_SHORT).show()

@@ -1,6 +1,11 @@
 package com.example.techz.ui.navigation
 
 sealed class Screen(val route: String) {
+
+    object OrderHistory : Screen("order_history")
+    object ChangePassword : Screen("change_password")
+    object AccountLogged : Screen("account_logged")
+    object AccountDetail : Screen("account_detail")
     object Login : Screen("login")
     object Register : Screen("register")
     object Home : Screen("home")
