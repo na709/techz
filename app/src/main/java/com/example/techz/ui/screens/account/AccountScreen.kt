@@ -82,9 +82,8 @@ fun AccountScreen(
                 .padding(innerPadding)
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+            verticalArrangement = Arrangement.Top
         ) {
-            // Thêm Icon lớn để giao diện đỡ trống trải
             AsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
                     .data("https://dvna.site/images/logo.jpg")

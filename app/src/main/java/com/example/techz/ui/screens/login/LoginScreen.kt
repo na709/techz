@@ -25,7 +25,7 @@ import com.example.techz.service.RetrofitClient
 import com.example.techz.service.UserSession
 
 @Composable
-fun LoginScreen(onLoginSuccess: () -> Unit,
+fun LoginScreen(onLoginSuccess: (String) -> Unit,
                 onClickRegister: () -> Unit) {
     val context = LocalContext.current
 
@@ -51,11 +51,12 @@ fun LoginScreen(onLoginSuccess: () -> Unit,
                 if (response.isSuccessful && response.body()?.success == true) {
                     val authData = response.body()
                     val user = authData?.user
+                    val role = authData?.role ?:"user"
                     user?.name?.let {
-                        UserSession.login(context, it)
+                        UserSession.login(context, it,role)
                     }
                     Toast.makeText(context, "Xin chào ${user?.name}!", Toast.LENGTH_SHORT).show()
-                    onLoginSuccess()
+                    onLoginSuccess(role)
                 } else {
                     Toast.makeText(context, "Sai tài khoản hoặc mật khẩu!", Toast.LENGTH_SHORT).show()
                 }

@@ -21,6 +21,7 @@ data class User(
 data class AuthResponse(
     @SerializedName("success") val success: Boolean,
     @SerializedName("message") val message: String,
+    @SerializedName("role") val role: String,
     @SerializedName("user") val user: User? // Có thể null nếu thất bại
 )
 

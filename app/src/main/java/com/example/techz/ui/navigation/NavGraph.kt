@@ -23,9 +23,14 @@ fun AppNavGraph() {
 
         composable(Screen.Login.route) {
             LoginScreen(
-                onLoginSuccess =
-                    {
-                        navController.navigate(Screen.Home.route) { popUpTo(Screen.Login.route) { inclusive = true } }
+                onLoginSuccess = { role ->
+                        if (role == "admin")
+                        {
+                            navController.navigate(Screen.Home.route) { popUpTo(Screen.Login.route) { inclusive = true } }
+                        }else{
+                            navController.navigate(Screen.Home.route) { popUpTo(Screen.Login.route) { inclusive = true } }
+                        }
+
                     },
                 onClickRegister =
                     {

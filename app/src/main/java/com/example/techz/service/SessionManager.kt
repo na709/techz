@@ -8,15 +8,21 @@ import androidx.compose.runtime.setValue
 object UserSession {
     var currentUserName by mutableStateOf<String?>(null)
         private set
+    var currentUserRole by mutableStateOf<String?>(null)
+        private set
+    var currentUserId by mutableStateOf<Int?>(null)
+        private set
 
-    // Hàm gọi khi đăng nhập/đăng ký thành công
-    fun login(context: Context, name: String) {
+
+    fun login(context: Context, name: String,role: String) {
         currentUserName = name
+        currentUserRole= role
 
         // Lưu vào SharedPreferences để giữ đăng nhập khi tắt app
         val sharedPref = context.getSharedPreferences("TechZ_Prefs", Context.MODE_PRIVATE)
         with(sharedPref.edit()) {
             putString("USER_NAME", name)
+            putString("USER_ROLE", role)
             apply()
         }
     }
