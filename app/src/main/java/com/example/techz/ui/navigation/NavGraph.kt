@@ -18,7 +18,6 @@ import com.example.techz.ui.screens.admin.AdminOrderScreen
 import com.example.techz.ui.screens.cart.CartScreen
 import com.example.techz.ui.screens.home.HomeScreen
 import com.example.techz.ui.screens.login.LoginScreen
-import com.example.techz.ui.screens.payment.PaymentScreen
 import com.example.techz.ui.screens.product.ProductDetailScreen
 import com.example.techz.ui.screens.product.ProductListScreen
 import com.example.techz.ui.screens.register.RegisterScreen
@@ -92,14 +91,22 @@ fun AppNavGraph(
                 }
             )
         }
-
-
-        composable(Screen.Cart.route) {
+        composable("cart") {
             CartScreen(
-                onCheckout = { navController.navigate(Screen.Payment.route) },
-                onBack = { navController.popBackStack() }
+                onBack = { navController.popBackStack() },
+                onCheckout = {
+                    // Xử lý sau khi thanh toán thành công (VD: về trang chủ)
+                    navController.navigate("home")
+                },
+                onRequireLogin = {
+                    // Chuyển hướng sang màn hình đăng nhập
+                    navController.navigate("login")
+                }
             )
         }
+
+
+
 
         composable(
             route = "detail/{id}",
@@ -117,12 +124,7 @@ fun AppNavGraph(
             )
         }
 
-        composable(Screen.Payment.route) {
-            PaymentScreen(
-                onConfirm = { navController.navigate(Screen.Home.route) { popUpTo(Screen.Home.route) { inclusive = true } } },
-                onBack = { navController.popBackStack() }
-            )
-        }
+
 
         composable(Screen.Account.route) {
             if (UserSession.isLoggedIn) {

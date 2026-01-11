@@ -1,12 +1,8 @@
 package com.example.techz.model
 
-
 import com.google.gson.annotations.SerializedName
 
 data class Product(
-    // @SerializedName("tên_cột_trong_json")
-    // val tên_biến_trong_kotlin: Kiểu_dữ_liệu
-
     @SerializedName("id_san_pham")
     val id: Int,
 
@@ -16,16 +12,22 @@ data class Product(
     @SerializedName("gia")
     val price: Double,
 
-/*  //khi dùng api : dvna.site thì bỏ commnet
-    @SerializedName("hinh_anh_full")
-    val image: String?,*/
-    @SerializedName("hinh_anh")
+    // [QUAN TRỌNG] Thêm alternate để bắt cả "hinh_anh" lẫn "hinh_anh_full"
+    // Giúp tránh lỗi nếu server đổi tên cột
+    @SerializedName(value = "hinh_anh_full", alternate = ["hinh_anh", "image"])
     val image: String?,
-
 
     @SerializedName("mo_ta")
     val description: String?,
 
     @SerializedName("loai_linh_kien")
-    val category: String?
+    val category: String?,
+
+    @SerializedName("so_luong_ton")
+    val stock: Int
+)
+//new
+data class CartItem(
+    val product: Product,
+    var quantity: Int
 )

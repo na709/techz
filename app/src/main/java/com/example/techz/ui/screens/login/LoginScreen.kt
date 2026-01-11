@@ -33,8 +33,8 @@ fun LoginScreen(onLoginSuccess: (String) -> Unit,
     var password by remember { mutableStateOf("") }
     var isLoading by remember { mutableStateOf(false) }
 
-    //val logoUrl = "http://160.250.247.5/images/logo.jpg"
-    val logoUrl = "https://dvna.site/images/logo.jpg"
+    val logoUrl = "http://160.250.247.5/images/logo.jpg"
+    //val logoUrl = "https://dvna.site/images/logo.jpg"
     val brandColor = Color(0xFF00A9FF)
 
 
@@ -47,7 +47,7 @@ fun LoginScreen(onLoginSuccess: (String) -> Unit,
         val request = LoginRequest(username = username, password = password)
         RetrofitClient.instance.loginUser(request).enqueue(object : Callback<AuthResponse> {
             override fun onResponse(call: Call<AuthResponse>, response: Response<AuthResponse>) {
-
+                //new
                 if (response.isSuccessful && response.body()?.success == true) {
                     val authData = response.body()
                     val user = authData?.user
