@@ -1,6 +1,7 @@
 package com.example.techz.ui.screens.product
 
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -22,8 +23,10 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.techz.model.Product
+
 import com.example.techz.service.RetrofitClient
 import com.example.techz.ui.components.ProductItem
+import com.example.techz.ui.screens.cart.CartManager
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -37,8 +40,10 @@ fun ProductDetailScreen(
     productId: Int,
     onAddToCart: () -> Unit,
     onBack: () -> Unit,
-    onProductClick: (Int) -> Unit
+    onProductClick: (Int) -> Unit,
+
 ) {
+    val context = LocalContext.current
     var product by remember { mutableStateOf<Product?>(null) }
     var relatedProducts by remember { mutableStateOf<List<Product>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
@@ -99,8 +104,25 @@ fun ProductDetailScreen(
         bottomBar = {
             if (product != null) {
                 Surface(shadowElevation = 16.dp) {
+                    // Lấy context để dùng cho Toast và CartManager
+                    val context = LocalContext.current
+
                     Button(
-                        onClick = onAddToCart,
+                        onClick = {
+
+                            // --- ĐOẠN CODE MỚI ---
+                            if (product != null) {
+                                // 1. Gọi hàm thêm vào giỏ hàng (Lưu cả Local & Server)
+                                CartManager.addToCart(context, product!!)
+
+                                // 2. Thông báo cho người dùng
+                                Toast.makeText(context, "Đã thêm vào giỏ hàng!", Toast.LENGTH_SHORT).show()
+                                // 3. (Tùy chọn) Chuyển sang màn hình giỏ hàng hoặc quay lại
+                                // Nếu bạn muốn nhấn xong là chuyển trang luôn thì giữ dòng này:
+                                onAddToCart()
+                            }
+                            // ---------------------
+                        },
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(16.dp)

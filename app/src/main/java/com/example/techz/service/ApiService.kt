@@ -4,7 +4,6 @@ import com.example.techz.model.AuthResponse
 import com.example.techz.model.ChangePasswordRequest
 import com.example.techz.model.CreateManagerRequest
 import com.example.techz.model.LoginRequest
-import com.example.techz.model.Order
 import com.example.techz.model.Product
 import com.example.techz.model.RegisterRequest
 import com.example.techz.model.UpdateProfileRequest
@@ -18,8 +17,6 @@ import retrofit2.http.Path
 
 interface ApiService {
 
-    @GET("api/user/{id}/orders")
-    fun getUserOrders(@Path("id") userId: Int): Call<List<Order>>
     @POST("api/user/change-password")
     fun changePassword(@Body request: ChangePasswordRequest): Call<AuthResponse>
     @POST("api/user/update")
