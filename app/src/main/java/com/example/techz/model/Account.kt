@@ -9,7 +9,16 @@ import com.google.gson.annotations.SerializedName
     val username: String,
     val password: String
 )*/
-
+//data để hứng dữ liệu gửi về từ server
+data class Order(
+    @SerializedName("id_don_hang") val id: Int,
+    @SerializedName("ngay_dat_hang") val date: String,
+    @SerializedName("trang_thai") val status: String,
+    @SerializedName("tong_tien") val total: Double,
+    @SerializedName("ten_san_pham") val firstProductName: String?,
+    @SerializedName("hinh_anh") val firstProductImage: String?,
+    @SerializedName("so_luong_sp") val totalItems: Int
+)
 data class User(
     @SerializedName("id") val id: Int,
     @SerializedName("username") val username: String,
