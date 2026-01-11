@@ -7,13 +7,14 @@ import androidx.navigation.compose.rememberNavController
 import com.example.techz.service.UserSession
 import com.example.techz.ui.navigation.AppNavGraph
 import com.example.techz.ui.navigation.Screen
+import com.example.techz.ui.screens.cart.CartManager
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         UserSession.initSession(this)
-
+        CartManager.loadCart(this)
         setContent {
             val navController = rememberNavController()
 
