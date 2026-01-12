@@ -119,7 +119,7 @@ fun ProductDetailScreen(
                                 Toast.makeText(context, "Đã thêm vào giỏ hàng!", Toast.LENGTH_SHORT).show()
                                 // 3. (Tùy chọn) Chuyển sang màn hình giỏ hàng hoặc quay lại
                                 // Nếu bạn muốn nhấn xong là chuyển trang luôn thì giữ dòng này:
-                                //onAddToCart()
+                                onAddToCart()
                             }
                             // ---------------------
                         },

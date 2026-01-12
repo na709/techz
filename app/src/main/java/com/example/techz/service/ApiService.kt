@@ -6,7 +6,6 @@ import com.example.techz.model.CartRequest
 import com.example.techz.model.ChangePasswordRequest
 import com.example.techz.model.CreateManagerRequest
 import com.example.techz.model.LoginRequest
-import com.example.techz.model.Order
 import com.example.techz.model.OrderRequest
 import com.example.techz.model.Product
 import com.example.techz.model.RegisterRequest
@@ -22,8 +21,6 @@ import retrofit2.http.POST
 import retrofit2.http.Path
 
 interface ApiService {
-    @GET("api/user/{id}/orders")
-    fun getUserOrders(@Path("id") userId: Int): Call<List<Order>>
 
     @POST("api/user/change-password")
     fun changePassword(@Body request: ChangePasswordRequest): Call<AuthResponse>
@@ -43,6 +40,7 @@ interface ApiService {
     // get productdetail
     @GET("api/products/{id}")
     fun getProductDetail(@Path("id")id: Int): Call<Product>
+
     //các thao tác với giỏ hàng
     @POST("api/cart/add")
     fun addToCart(@Body request: CartRequest): Call<AuthResponse>
@@ -61,8 +59,8 @@ interface ApiService {
 }
 
 object RetrofitClient {
-    private const val BASE_URL = "http://160.250.247.5:3000/"
-    //private const val BASE_URL = "http://10.0.2.2:3000/"
+    //private const val BASE_URL = "http://160.250.247.5:3000/"
+    private const val BASE_URL = "http://10.0.2.2:3000/"
     val instance: ApiService by lazy {
         val retrofit = Retrofit.Builder()
             .baseUrl(BASE_URL)
