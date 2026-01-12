@@ -75,7 +75,6 @@ fun BannerScroll(
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        // 2. PHẦN THANH CHỈ DẪN (INDICATORS - GẠCH NGANG)
         Row(
             modifier = Modifier
                 .wrapContentHeight()

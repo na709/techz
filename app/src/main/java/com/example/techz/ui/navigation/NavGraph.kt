@@ -43,14 +43,14 @@ fun AppNavGraph(
             LoginScreen(
 
                 onLoginSuccess = { role ->
-                        if (role == "admin")
-                        {
-                            navController.navigate(Screen.AdminDashboard.route) {
-                                popUpTo(0) { inclusive = true }}
-                        }else{
-                            navController.navigate(Screen.Home.route) { popUpTo(Screen.Login.route) { inclusive = true } }
-                        }
-                    },
+                    if (role == "admin")
+                    {
+                        navController.navigate(Screen.AdminDashboard.route) {
+                            popUpTo(0) { inclusive = true }}
+                    }else{
+                        navController.navigate(Screen.Home.route) { popUpTo(Screen.Login.route) { inclusive = true } }
+                    }
+                },
                 onClickRegister =
                     {
                         navController.navigate(Screen.Register.route) { popUpTo(Screen.Login.route) { inclusive = true } }
@@ -77,7 +77,7 @@ fun AppNavGraph(
                 },
                 onCategoryClick = { category ->
                     navController.navigate("${Screen.ProductList.route}?category=$category")
-                                  },
+                },
                 onGoToCart = { navController.navigate(Screen.Cart.route) },
                 onViewAll = { navController.navigate(Screen.ProductList.route) }
             )
@@ -112,6 +112,7 @@ fun AppNavGraph(
                 }
             )
         }
+
 
 
 
@@ -207,6 +208,7 @@ fun AppNavGraph(
 
         composable(Screen.OrderHistory.route) {
             AccountOrderScreen(navController = navController)
+
         }
 
         composable(Screen.ChangePassword.route) {

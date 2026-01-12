@@ -60,10 +60,11 @@ fun HomeScreen(
     var productList by remember { mutableStateOf<List<Product>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
     val bannerList = listOf(
-        "https://s3.cloudfly.vn/techz-product-images1/banner/banner1.png",
-        "https://s3.cloudfly.vn/techz-product-images1/banner/banner2.png",
-        "https://s3.cloudfly.vn/techz-product-images1/banner/banner3.png",
-        "https://s3.cloudfly.vn/techz-product-images1/banner/banner4.png"
+        "https://s3.cloudfly.vn/techz-product-images1/banner/banner-sales.jpg",
+        "https://s3.cloudfly.vn/techz-product-images1/banner/banner-sales1.png",
+        "https://s3.cloudfly.vn/techz-product-images1/banner/banner-sales2.png",
+        "https://s3.cloudfly.vn/techz-product-images1/banner/banner-sales3.png",
+        "https://s3.cloudfly.vn/techz-product-images1/banner/banner-sales4.png"
     )
 
     LaunchedEffect(Unit) {
