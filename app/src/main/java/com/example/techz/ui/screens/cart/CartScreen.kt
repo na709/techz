@@ -34,17 +34,16 @@ import java.util.Locale
 @Composable
 fun CartScreen(
     onCheckout: () -> Unit,
-    onBack: () -> Unit,        // Thêm tham số nút Back
-    onRequireLogin: () -> Unit // Thêm tham số yêu cầu Login
+    onBack: () -> Unit,
+    onRequireLogin: () -> Unit
 ) {
     val context = LocalContext.current
     val cartItems = CartManager.cartItems
     val totalPrice = CartManager.getTotalPrice()
 
-    // 1. [STATE HOISTING] Biến chọn phương thức thanh toán nằm ở đây
+    // Biến chọn phương thức thanh toán
     var selectedMethod by remember { mutableStateOf("Tiền mặt") }
 
-    // Load giỏ hàng khi vào màn hình
     LaunchedEffect(Unit) {
         UserSession.initSession(context)
         CartManager.loadCart(context)
@@ -62,25 +61,40 @@ fun CartScreen(
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color(0xFF00A9FF))
             )
         },
+        // --- THAY ĐỔI Ở ĐÂY: Đưa Combobox vào bottomBar ---
         bottomBar = {
             if (cartItems.isNotEmpty()) {
-                // 3. BottomBar chỉ còn nút và giá (Gọn gàng)
-                MinimalPaymentBottomBar(
-                    totalPrice = totalPrice,
-                    onCheckoutClick = {
-                        UserSession.initSession(context)
-                        if (!UserSession.isLoggedIn) {
-                            Toast.makeText(context, "Vui lòng đăng nhập!", Toast.LENGTH_SHORT).show()
-                            onRequireLogin()
-                        } else {
-                            // Gửi selectedMethod (đã chọn ở trên) vào hàm đặt hàng
-                            CartManager.placeOrder(context, selectedMethod) {
-                                Toast.makeText(context, "Đặt hàng thành công!", Toast.LENGTH_LONG).show()
-                                onCheckout()
+                // Tạo một Surface có bóng đổ để chứa cả Combobox và Nút đặt hàng
+                Surface(
+                    shadowElevation = 16.dp,
+                    color = Color.White,
+                    shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)
+                ) {
+                    Column {
+                        PaymentMethodSelector(
+                            currentMethod = selectedMethod,
+                            onMethodChanged = { newMethod -> selectedMethod = newMethod }
+                        )
+
+                        HorizontalDivider(thickness = 0.5.dp, color = Color.LightGray)
+
+                        MinimalPaymentBottomBar(
+                            totalPrice = totalPrice,
+                            onCheckoutClick = {
+                                UserSession.initSession(context)
+                                if (!UserSession.isLoggedIn) {
+                                    Toast.makeText(context, "Vui lòng đăng nhập!", Toast.LENGTH_SHORT).show()
+                                    onRequireLogin()
+                                } else {
+                                    CartManager.placeOrder(context, selectedMethod) {
+                                        Toast.makeText(context, "Đặt hàng thành công!", Toast.LENGTH_LONG).show()
+                                        onCheckout()
+                                    }
+                                }
                             }
-                        }
+                        )
                     }
-                )
+                }
             }
         }
     ) { paddingValues ->
@@ -97,20 +111,11 @@ fun CartScreen(
                     .fillMaxSize()
                     .padding(paddingValues)
                     .background(Color(0xFFF5F5F5)),
-                contentPadding = PaddingValues(bottom = 16.dp)
+                contentPadding = PaddingValues(16.dp)
             ) {
-                // Phần 1: Danh sách sản phẩm
                 items(cartItems) { item ->
                     CartItemRow(item, context)
                     Spacer(modifier = Modifier.height(8.dp))
-                }
-
-                // Phần 2: Đưa ComboBox vào cuối danh sách cuộn
-                item {
-                    PaymentMethodSelector(
-                        currentMethod = selectedMethod,
-                        onMethodChanged = { newMethod -> selectedMethod = newMethod }
-                    )
                 }
             }
         }
@@ -118,7 +123,7 @@ fun CartScreen(
 }
 
 // ==========================================
-// COMPONENT 1: DÒNG SẢN PHẨM (ĐÂY LÀ PHẦN BẠN BỊ THIẾU)
+// COMPONENT 1: DÒNG SẢN PHẨM
 // ==========================================
 @Composable
 fun CartItemRow(item: CartItem, context: Context) {
@@ -159,6 +164,7 @@ fun CartItemRow(item: CartItem, context: Context) {
                     modifier = Modifier.align(Alignment.End),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
+                    //
                     IconButton(onClick = { CartManager.updateQuantity(context, item.product.id, -1) }) {
                         Text("—", fontWeight = FontWeight.Bold, fontSize = 18.sp)
                     }
@@ -186,11 +192,9 @@ fun PaymentMethodSelector(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp)
-            .background(Color.White, shape = RoundedCornerShape(12.dp))
-            .padding(16.dp)
+            .padding(horizontal = 16.dp, vertical = 8.dp) // Căn chỉnh padding cho gọn
     ) {
-        Text("Phương thức thanh toán", fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 8.dp))
+        Text("Phương thức thanh toán", fontWeight = FontWeight.Bold, fontSize = 14.sp, modifier = Modifier.padding(bottom = 8.dp))
 
         Box(
             modifier = Modifier
@@ -235,35 +239,30 @@ fun MinimalPaymentBottomBar(
     totalPrice: Double,
     onCheckoutClick: () -> Unit
 ) {
-    Surface(
-        shadowElevation = 16.dp,
-        color = Color.White
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Column {
-                Text("Tổng thanh toán:", fontSize = 14.sp, color = Color.Gray)
-                Text(
-                    text = NumberFormat.getCurrencyInstance(Locale("vi", "VN")).format(totalPrice),
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.Red
-                )
-            }
+        Column {
+            Text("Tổng thanh toán:", fontSize = 14.sp, color = Color.Gray)
+            Text(
+                text = NumberFormat.getCurrencyInstance(Locale("vi", "VN")).format(totalPrice),
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.Red
+            )
+        }
 
-            Button(
-                onClick = onCheckoutClick,
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF5722)),
-                shape = RoundedCornerShape(8.dp),
-                modifier = Modifier.height(48.dp)
-            ) {
-                Text("ĐẶT HÀNG", fontWeight = FontWeight.Bold, color = Color.White)
-            }
+        Button(
+            onClick = onCheckoutClick,
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF5722)),
+            shape = RoundedCornerShape(8.dp),
+            modifier = Modifier.height(48.dp)
+        ) {
+            Text("ĐẶT HÀNG", fontWeight = FontWeight.Bold, color = Color.White)
         }
     }
 }
