@@ -17,7 +17,7 @@ data class CartRequest(
 // Item hiển thị trong danh sách giỏ hàng
 data class CartItem(
     @SerializedName("product")
-    val product: Product, // Đảm bảo class Product của bạn có các trường id, name, price, image
+    val product: Product,
 
     @SerializedName("quantity")
     var quantity: Int

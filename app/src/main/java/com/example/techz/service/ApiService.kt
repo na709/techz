@@ -52,14 +52,14 @@ interface ApiService {
     //các thao tác với giỏ hàng
     @POST("api/cart/add")
     fun addToCart(@Body request: CartRequest): Call<AuthResponse>
+    @POST("api/cart/remove")
+    fun removeFromCart(@Body request: CartRequest): Call<AuthResponse>
     @POST("api/cart/update")
     fun updateQuantity(@Body request: CartRequest): Call<AuthResponse>
 
     @GET("api/cart/{userId}")
     fun getCart(@Path("userId") userId: Int): Call<List<CartItem>>
 
-    @HTTP(method = "DELETE", path = "api/cart/remove", hasBody = true)
-    fun removeFromCart(@Body request: CartRequest): Call<AuthResponse>
 
     @DELETE("api/cart/clear/{userId}")
     fun clearCart(@Path("userId") userId: Int): Call<AuthResponse>

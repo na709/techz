@@ -15,7 +15,6 @@ import retrofit2.Callback
 import retrofit2.Response
 
 object CartManager {
-    // List giỏ hàng (State để UI tự cập nhật)
     val cartItems = mutableStateListOf<CartItem>()
 
     fun getTotalPrice(): Double {
@@ -86,6 +85,33 @@ object CartManager {
         })
     }
 
+    fun removeProduct(context: Context, productId: Int) {
+        val userId = UserSession.currentUserId ?: 0
+
+        if (userId <= 0) {
+            Toast.makeText(context, "Vui lòng đăng nhập!", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        // Tạo request gửi lên server
+        val request = CartRequest(userId, productId, 0)
+
+        RetrofitClient.instance.removeFromCart(request).enqueue(object : Callback<AuthResponse> {
+            override fun onResponse(call: Call<AuthResponse>, response: Response<AuthResponse>) {
+                if (response.isSuccessful) {
+                    // Xóa thành công trên Server -> Xóa khỏi list local để cập nhật UI ngay lập tức
+                    cartItems.removeIf { it.product.id == productId }
+                    Toast.makeText(context, "Đã xóa sản phẩm", Toast.LENGTH_SHORT).show()
+                } else {
+                    Toast.makeText(context, "Lỗi xóa: ${response.message()}", Toast.LENGTH_SHORT).show()
+                }
+            }
+
+            override fun onFailure(call: Call<AuthResponse>, t: Throwable) {
+                Toast.makeText(context, "Lỗi mạng!", Toast.LENGTH_SHORT).show()
+            }
+        })
+    }
     fun placeOrder(context: Context, paymentMethod: String, onSuccess: () -> Unit) {
         val userId = UserSession.currentUserId
         if (userId == null) {
@@ -117,7 +143,7 @@ object CartManager {
             )
         }
 
-        // --- BƯỚC 2: TẠO REQUEST ---
+
         val orderRequest = OrderRequest(
             userId = userId,
             address = address,
@@ -127,15 +153,13 @@ object CartManager {
             cartItems = orderDetails // <--- Truyền danh sách sản phẩm vào đây
         )
 
-        // --- BƯỚC 3: GỌI API ---
         RetrofitClient.instance.createOrder(orderRequest).enqueue(object : Callback<AuthResponse> {
             override fun onResponse(call: Call<AuthResponse>, response: Response<AuthResponse>) {
                 if (response.isSuccessful && response.body()?.success == true) {
 
-                    // Xóa giỏ hàng trên UI (RAM)
+
                     cartItems.clear()
 
-                    // Thông báo thành công
                     Toast.makeText(context, "Đặt hàng thành công!", Toast.LENGTH_SHORT).show()
                     onSuccess()
 

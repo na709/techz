@@ -104,12 +104,13 @@ fun AppNavGraph(
             CartScreen(
                 onBack = { navController.popBackStack() },
                 onCheckout = {
-                    // Xử lý sau khi thanh toán thành công (VD: về trang chủ)
+                    // Xử lý sau khi thanh toán thành công (về trang chủ)
                     navController.navigate("home")
                 },
                 onRequireLogin = {
-                    // Chuyển hướng sang màn hình đăng nhập
                     navController.navigate("login")
+                },
+                onMissingInfo = { navController.navigate("account_detail")
                 }
             )
         }

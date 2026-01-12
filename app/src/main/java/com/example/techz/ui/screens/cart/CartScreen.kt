@@ -12,6 +12,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -35,7 +36,8 @@ import java.util.Locale
 fun CartScreen(
     onCheckout: () -> Unit,
     onBack: () -> Unit,
-    onRequireLogin: () -> Unit
+    onRequireLogin: () -> Unit,
+    onMissingInfo: () -> Unit
 ) {
     val context = LocalContext.current
     val cartItems = CartManager.cartItems
@@ -61,10 +63,8 @@ fun CartScreen(
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color(0xFF00A9FF))
             )
         },
-        // --- THAY ĐỔI Ở ĐÂY: Đưa Combobox vào bottomBar ---
         bottomBar = {
             if (cartItems.isNotEmpty()) {
-                // Tạo một Surface có bóng đổ để chứa cả Combobox và Nút đặt hàng
                 Surface(
                     shadowElevation = 16.dp,
                     color = Color.White,
@@ -86,9 +86,27 @@ fun CartScreen(
                                     Toast.makeText(context, "Vui lòng đăng nhập!", Toast.LENGTH_SHORT).show()
                                     onRequireLogin()
                                 } else {
-                                    CartManager.placeOrder(context, selectedMethod) {
-                                        Toast.makeText(context, "Đặt hàng thành công!", Toast.LENGTH_LONG).show()
-                                        onCheckout()
+                                    val currentAddress = UserSession.currentUserAddress
+                                    val currentPhone = UserSession.currentUserPhone
+
+                                    if (currentAddress.isNullOrBlank() || currentPhone.isNullOrBlank()) {
+                                        Toast.makeText(
+                                            context,
+                                            "Vui lòng cập nhật Địa chỉ và SĐT để mua hàng!",
+                                            Toast.LENGTH_LONG
+                                        ).show()
+
+                                        onMissingInfo()
+                                    } else {
+                                        // 3. Đủ thông tin thì đặt hàng
+                                        CartManager.placeOrder(context, selectedMethod) {
+                                            Toast.makeText(
+                                                context,
+                                                "Đặt hàng thành công!",
+                                                Toast.LENGTH_LONG
+                                            ).show()
+                                            onCheckout()
+                                        }
                                     }
                                 }
                             }
@@ -122,12 +140,8 @@ fun CartScreen(
     }
 }
 
-// ==========================================
-// COMPONENT 1: DÒNG SẢN PHẨM
-// ==========================================
 @Composable
 fun CartItemRow(item: CartItem, context: Context) {
-    // --- XỬ LÝ ẢNH ---
     val baseUrl = "http://160.250.247.5/images/"
     val rawImageName = item.product.image ?: ""
     val fullImageUrl = if (rawImageName.startsWith("http")) rawImageName else baseUrl + rawImageName
@@ -141,7 +155,6 @@ fun CartItemRow(item: CartItem, context: Context) {
     ) {
         Row(modifier = Modifier.padding(8.dp), verticalAlignment = Alignment.CenterVertically) {
 
-            // Hiển thị ảnh
             AsyncImage(
                 model = fullImageUrl,
                 contentDescription = null,
@@ -174,13 +187,22 @@ fun CartItemRow(item: CartItem, context: Context) {
                     }
                 }
             }
+            IconButton(
+                onClick = {
+                    CartManager.removeProduct(context, item.product.id)
+                }
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Close,
+                    contentDescription = "Xóa",
+                    tint = Color.Gray
+                )
+            }
         }
     }
+
 }
-//
-// ==========================================
-// COMPONENT 2: CÁI COMBOBOX (Đặt trong LazyColumn)
-// ==========================================
+
 @Composable
 fun PaymentMethodSelector(
     currentMethod: String,
@@ -231,9 +253,7 @@ fun PaymentMethodSelector(
     }
 }
 
-// ==========================================
-// COMPONENT 3: BOTTOM BAR (Chỉ còn Giá & Nút)
-// ==========================================
+
 @Composable
 fun MinimalPaymentBottomBar(
     totalPrice: Double,
