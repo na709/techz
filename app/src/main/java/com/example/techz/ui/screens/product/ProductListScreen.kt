@@ -35,7 +35,7 @@ import com.example.techz.ui.components.TechZBottomBar
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
-
+//
 // --- 1. Danh sách loại linh kiện (theo API) ---
 val CATEGORIES = listOf(
     "ThietBiMang", "RAM", "VGA", "Ghe", "Case",

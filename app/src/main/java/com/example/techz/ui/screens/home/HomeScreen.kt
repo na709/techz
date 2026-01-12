@@ -37,7 +37,7 @@ import com.example.techz.ui.components.TechZBottomBar
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
-@Composable//new
+@Composable//new//
 fun getCategoryIcon(category: String): androidx.compose.ui.graphics.vector.ImageVector {
     return when (category) {
         "Laptop", "PC" -> Icons.Default.Computer

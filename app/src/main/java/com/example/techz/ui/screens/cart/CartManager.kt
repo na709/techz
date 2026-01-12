@@ -56,7 +56,7 @@ object CartManager {
             Toast.makeText(context, "Số lượng tối thiểu là 1", Toast.LENGTH_SHORT).show()
             return
         }
-
+//
         // 3. QUAN TRỌNG: Tạo bản sao mới (copy) và gán lại vào vị trí cũ
         // Việc gán cartItems[index] = ... sẽ báo cho Compose biết để vẽ lại UI ngay lập tức
         cartItems[index] = currentItem.copy(quantity = newQuantity)

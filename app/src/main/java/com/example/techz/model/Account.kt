@@ -1,5 +1,5 @@
 package com.example.techz.model
-
+//
 import com.google.gson.annotations.SerializedName
 
 
