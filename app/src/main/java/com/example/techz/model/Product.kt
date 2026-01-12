@@ -12,8 +12,6 @@ data class Product(
     @SerializedName("gia")
     val price: Double,
 
-    // [QUAN TRỌNG] Thêm alternate để bắt cả "hinh_anh" lẫn "hinh_anh_full"
-    // Giúp tránh lỗi nếu server đổi tên cột
     @SerializedName(value = "hinh_anh_full", alternate = ["hinh_anh", "image"])
     val image: String?,
 
@@ -26,7 +24,7 @@ data class Product(
     @SerializedName("so_luong_ton")
     val stock: Int
 )
-//new
+
 data class CartItem(
     val product: Product,
     var quantity: Int
