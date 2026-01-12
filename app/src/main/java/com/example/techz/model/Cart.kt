@@ -13,7 +13,7 @@ data class CartRequest(
     @SerializedName("so_luong")
     val quantity: Int
 )
-
+//
 // Item hiển thị trong danh sách giỏ hàng
 data class CartItem(
     @SerializedName("product")
