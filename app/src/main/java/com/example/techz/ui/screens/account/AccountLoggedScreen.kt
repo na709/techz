@@ -25,7 +25,7 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.techz.service.UserSession
 import com.example.techz.ui.components.TechZBottomBar
-
+//
 @Composable
 fun AccountLoggedScreen(
     navController: NavHostController,

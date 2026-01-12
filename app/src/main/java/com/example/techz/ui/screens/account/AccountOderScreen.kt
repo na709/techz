@@ -21,7 +21,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
-import com.example.techz.model.Order
+import com.example.techz.model.Order // Import model Order thật
 import com.example.techz.service.RetrofitClient
 import com.example.techz.service.UserSession
 import com.example.techz.ui.components.TechZBottomBar
@@ -39,9 +39,11 @@ fun AccountOrderScreen(
     val brandColor = Color(0xFF00A9FF)
     val userName = UserSession.currentUserName
 
+    // State quản lý danh sách đơn hàng
     var orderList by remember { mutableStateOf<List<Order>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
 
+    // --- GỌI API LẤY DANH SÁCH ĐƠN HÀNG ---
     LaunchedEffect(Unit) {
         val userId = UserSession.currentUserId
         if (userId != null) {
@@ -52,6 +54,7 @@ fun AccountOrderScreen(
                         orderList = response.body() ?: emptyList()
                     }
                 }
+
                 override fun onFailure(call: Call<List<Order>>, t: Throwable) {
                     isLoading = false
                 }
@@ -107,13 +110,15 @@ fun AccountOrderScreen(
 fun OrderItem(order: Order) {
     val formatter = NumberFormat.getCurrencyInstance(Locale("vi", "VN"))
 
+    // Xử lý màu trạng thái
     val statusColor = when (order.status) {
         "Hoàn thành", "Đã giao" -> Color(0xFF4CAF50)
         "Đã hủy" -> Color(0xFFF44336)
         "Đang giao", "Đang vận chuyển" -> Color(0xFF2196F3)
-        else -> Color(0xFFFF9800)
+        else -> Color(0xFFFF9800) // Chờ xử lý
     }
 
+    // Xử lý tên sản phẩm hiển thị
     val displayProductName = if (order.totalItems > 1) {
         "${order.firstProductName} và ${order.totalItems - 1} sản phẩm khác"
     } else {
@@ -127,6 +132,7 @@ fun OrderItem(order: Order) {
         modifier = Modifier.fillMaxWidth()
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
+            // Header
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
@@ -139,9 +145,10 @@ fun OrderItem(order: Order) {
 
             HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp), thickness = 0.5.dp, color = Color.LightGray)
 
+            // Body
             Row(verticalAlignment = Alignment.CenterVertically) {
                 AsyncImage(
-                    model = order.firstProductImage,
+                    model = order.firstProductImage, // Link ảnh từ API
                     contentDescription = null,
                     modifier = Modifier
                         .size(60.dp)
@@ -166,6 +173,7 @@ fun OrderItem(order: Order) {
 
             HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp), thickness = 0.5.dp, color = Color.LightGray)
 
+            // Footer
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.End

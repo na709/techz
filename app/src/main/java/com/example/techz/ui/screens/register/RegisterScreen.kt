@@ -56,7 +56,7 @@ fun RegisterScreen(
             Toast.makeText(context, "Mật khẩu nhập lại không khớp!", Toast.LENGTH_SHORT).show()
             return
         }
-
+//
         isLoading = true
         val request = RegisterRequest(name, email, username, password)
 

@@ -1,5 +1,5 @@
 package com.example.techz.model
-
+///
 import com.google.gson.annotations.SerializedName
 
 // Request gửi lên khi Thêm/Sửa/Xóa giỏ hàng

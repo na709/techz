@@ -1,5 +1,5 @@
 package com.example.techz.ui.navigation
-
+//
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.CircularProgressIndicator
@@ -116,6 +116,7 @@ fun AppNavGraph(
 
 
 
+
         composable(Screen.Detail.route) { backStackEntry ->
             // Lấy ID từ đường dẫn
             val productIdStr = backStackEntry.arguments?.getString("id")
@@ -207,6 +208,7 @@ fun AppNavGraph(
 
         composable(Screen.OrderHistory.route) {
             AccountOrderScreen(navController = navController)
+
         }
 
         composable(Screen.ChangePassword.route) {

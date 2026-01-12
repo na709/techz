@@ -1,5 +1,6 @@
 package com.example.techz.service
 
+
 import com.example.techz.model.AuthResponse
 import com.example.techz.model.CartItem
 import com.example.techz.model.CartRequest
@@ -10,6 +11,10 @@ import com.example.techz.model.OrderRequest
 import com.example.techz.model.Product
 import com.example.techz.model.RegisterRequest
 import com.example.techz.model.UpdateProfileRequest
+
+//
+import com.example.techz.model.*
+
 import retrofit2.Call
 import retrofit2.http.GET
 import retrofit2.Retrofit
@@ -21,6 +26,9 @@ import retrofit2.http.POST
 import retrofit2.http.Path
 
 interface ApiService {
+
+    @GET("api/user/{id}/orders")
+    fun getUserOrders(@Path("id") userId: Int): Call<List<Order>>
 
     @POST("api/user/change-password")
     fun changePassword(@Body request: ChangePasswordRequest): Call<AuthResponse>
@@ -44,6 +52,8 @@ interface ApiService {
     //các thao tác với giỏ hàng
     @POST("api/cart/add")
     fun addToCart(@Body request: CartRequest): Call<AuthResponse>
+    @POST("api/cart/update")
+    fun updateQuantity(@Body request: CartRequest): Call<AuthResponse>
 
     @GET("api/cart/{userId}")
     fun getCart(@Path("userId") userId: Int): Call<List<CartItem>>
@@ -59,8 +69,8 @@ interface ApiService {
 }
 
 object RetrofitClient {
-    //private const val BASE_URL = "http://160.250.247.5:3000/"
-    private const val BASE_URL = "http://10.0.2.2:3000/"
+    private const val BASE_URL = "http://160.250.247.5:3000/"
+    //private const val BASE_URL = "http://10.0.2.2:3000/"
     val instance: ApiService by lazy {
         val retrofit = Retrofit.Builder()
             .baseUrl(BASE_URL)

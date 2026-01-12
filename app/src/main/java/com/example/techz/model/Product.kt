@@ -1,7 +1,7 @@
 package com.example.techz.model
 
 import com.google.gson.annotations.SerializedName
-
+//
 data class Product(
     @SerializedName("id_san_pham")
     val id: Int,
@@ -27,7 +27,3 @@ data class Product(
     val stock: Int
 )
 //new
-data class CartItem(
-    val product: Product,
-    var quantity: Int
-)

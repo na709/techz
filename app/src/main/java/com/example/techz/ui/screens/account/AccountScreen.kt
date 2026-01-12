@@ -39,7 +39,7 @@ import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.techz.ui.components.TechZBottomBar
-
+//
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AccountScreen(
