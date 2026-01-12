@@ -1,6 +1,14 @@
 package com.example.techz.ui.navigation
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -108,20 +116,44 @@ fun AppNavGraph(
 
 
 
-        composable(
-            route = "detail/{id}",
-            arguments = listOf(
-                navArgument("id") { type = NavType.IntType }
-            )
-        ) { backStackEntry ->
-            val productId = backStackEntry.arguments?.getInt("id") ?: 0
+        composable(Screen.Detail.route) { backStackEntry ->
+            // Lấy ID từ đường dẫn
+            val productIdStr = backStackEntry.arguments?.getString("id")
+            val productId = productIdStr?.toIntOrNull()
 
-            ProductDetailScreen(
-                productId = productId,
-                onAddToCart = { navController.navigate(Screen.Cart.route) },
-                onBack = { navController.popBackStack() },
-                onProductClick = { id -> navController.navigate("detail/$id") }
-            )
+            // Logic lấy Product từ API hoặc List (giữ nguyên logic cũ của bạn để lấy product)
+            // Ở đây tôi ví dụ cách lấy tạm thời, bạn hãy ghép với logic lấy product hiện tại của bạn
+
+            var product by remember { mutableStateOf<com.example.techz.model.Product?>(null) }
+
+            // Gọi API lấy chi tiết sản phẩm
+            LaunchedEffect(productId) {
+                if (productId != null) {
+                    com.example.techz.service.RetrofitClient.instance.getProductDetail(productId).enqueue(object : retrofit2.Callback<com.example.techz.model.Product> {
+                        override fun onResponse(call: retrofit2.Call<com.example.techz.model.Product>, response: retrofit2.Response<com.example.techz.model.Product>) {
+                            if(response.isSuccessful) product = response.body()
+                        }
+                        override fun onFailure(call: retrofit2.Call<com.example.techz.model.Product>, t: Throwable) {}
+                    })
+                }
+            }
+
+            if (product != null) {
+                ProductDetailScreen(
+                    product = product!!,
+                    navController = navController, // <--- QUAN TRỌNG: Truyền navController vào đây
+                    onBack = { navController.popBackStack() },
+                    onProductClick = { newProduct ->
+                        // Chuyển sang sản phẩm khác
+                        navController.navigate(Screen.Detail.passId(newProduct.id.toString()))
+                    }
+                )
+            } else {
+                // Hiển thị loading hoặc lỗi
+                Box(modifier = androidx.compose.ui.Modifier.fillMaxSize(), contentAlignment = androidx.compose.ui.Alignment.Center) {
+                    CircularProgressIndicator()
+                }
+            }
         }
 
 
