@@ -16,14 +16,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.example.techz.model.AuthResponse
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
-import com.example.techz.model.AuthResponse // File model vừa tạo
 import com.example.techz.model.LoginRequest // File model request
 import com.example.techz.service.RetrofitClient
 import com.example.techz.service.UserSession
-
+import com.example.techz.model.User
 @Composable
 fun LoginScreen(onLoginSuccess: (String) -> Unit,
                 onClickRegister: () -> Unit) {
