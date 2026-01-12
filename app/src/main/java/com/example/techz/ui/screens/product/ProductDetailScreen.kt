@@ -77,7 +77,6 @@ fun ProductDetailScreen(
                             // Có thể navigate về trang Login tại đây nếu muốn
                             navController.navigate(Screen.Login.route)
                         } else {
-                            // 2. Tạo Request chuẩn
                             val request = CartRequest(
                                 userId = userId,
                                 productId = product.id,
