@@ -55,9 +55,9 @@ interface ApiService {
     fun createOrder(@Body orderRequest: OrderRequest): Call<AuthResponse>
 }
 
-// --- PHẦN BỊ THIẾU Ở BƯỚC TRƯỚC ---
+
 object RetrofitClient {
-    // IP VPS của bạn và Port 3000 (NodeJS)
+
     private const val BASE_URL = "http://160.250.247.5:3000/"
     //private const val BASE_URL = "http://10.0.2.2:3000/"
 
