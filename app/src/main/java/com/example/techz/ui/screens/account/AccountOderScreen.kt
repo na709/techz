@@ -39,11 +39,9 @@ fun AccountOrderScreen(
     val brandColor = Color(0xFF00A9FF)
     val userName = UserSession.currentUserName
 
-    // State quản lý danh sách đơn hàng
     var orderList by remember { mutableStateOf<List<Order>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
 
-    // --- GỌI API LẤY DANH SÁCH ĐƠN HÀNG ---
     LaunchedEffect(Unit) {
         val userId = UserSession.currentUserId
         if (userId != null) {

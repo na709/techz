@@ -1,9 +1,8 @@
 package com.example.techz.model
-//
+
 import com.google.gson.annotations.SerializedName
 
 data class OrderRequest(
-    // App dùng 'userId', nhưng khi gửi lên Server sẽ tự đổi thành 'ma_khach_hang'
     @SerializedName("ma_khach_hang")
     val userId: Int,
 
@@ -17,5 +16,20 @@ data class OrderRequest(
     val paymentMethod: String,
 
     @SerializedName("tong_tien")
-    val totalPrice: Double
+    val totalPrice: Double,
+
+    @SerializedName("san_pham")
+    val cartItems: List<OrderDetailRequest>
+)
+
+data class OrderDetailRequest(
+
+    @SerializedName("id_san_pham")
+    val productId: Int,
+
+    @SerializedName("so_luong")
+    val quantity: Int,
+
+    @SerializedName("gia_ban")
+    val price: Double
 )

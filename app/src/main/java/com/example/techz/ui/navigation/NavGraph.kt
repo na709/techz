@@ -96,7 +96,8 @@ fun AppNavGraph(
                 initialCategory = category,
                 onProductClick = { id ->
                     navController.navigate("detail/$id")
-                }
+                },
+                onGoToCart = { navController.navigate(Screen.Cart.route) }
             )
         }
         composable("cart") {

@@ -4,7 +4,7 @@ import com.google.gson.annotations.SerializedName
 
 // Request gửi lên khi Thêm/Sửa/Xóa giỏ hàng
 data class CartRequest(
-    @SerializedName("id_khach_hang") // Map sang tên cột trong DB
+    @SerializedName("id_khach_hang")
     val userId: Int,
 
     @SerializedName("id_san_pham")

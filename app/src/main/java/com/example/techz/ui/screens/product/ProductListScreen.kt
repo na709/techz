@@ -45,7 +45,11 @@ val CATEGORIES = listOf(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ProductListScreen(navController: NavHostController,initialCategory: String? = null, onProductClick: (Int) -> Unit) { // Sửa String -> Int
+fun ProductListScreen(
+    navController: NavHostController,
+    initialCategory: String? = null,
+    onProductClick: (Int) -> Unit,
+    onGoToCart : () -> Unit) {
     val context = LocalContext.current
     var originalList by remember { mutableStateOf<List<Product>>(emptyList()) }
     var currentName by remember { mutableStateOf<String?>(null) }
@@ -122,7 +126,7 @@ fun ProductListScreen(navController: NavHostController,initialCategory: String? 
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text("TechZ Store", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
-                    IconButton(onClick = { }) {
+                    IconButton(onClick = { onGoToCart() }) {
                         Icon(Icons.Default.ShoppingCart, contentDescription = "Cart", tint = Color.White)
                     }
                 }
@@ -201,7 +205,6 @@ fun ProductListScreen(navController: NavHostController,initialCategory: String? 
             }
         }
 
-        // --- Bottom Sheet Bộ lọc ---
         if (showFilterSheet) {
             ModalBottomSheet(
                 onDismissRequest = { showFilterSheet = false },
