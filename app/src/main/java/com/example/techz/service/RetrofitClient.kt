@@ -11,7 +11,9 @@ import java.util.concurrent.TimeUnit
 
 object RetrofitClient {
 
-    private const val BASE_URL = "http://103.228.36.78:3000/"
+
+    private const val BASE_URL = "https://dvna.site/"
+    //private const val BASE_URL = "http://103.228.36.78:3000/"
 
     // 1. Cấu hình Logging (Để xem API gửi gì, nhận gì trong Logcat)
     private val loggingInterceptor = HttpLoggingInterceptor().apply {
@@ -30,7 +32,7 @@ object RetrofitClient {
         // Nếu có token thì thêm vào Header
         if (!token.isNullOrEmpty()) {
             builder.addHeader("Authorization", "Bearer $token")
-            Log.d("API_AUTH", "Đang gửi kèm Token: $token") // Log để kiểm tra
+            Log.d("API_AUTH", "Đang gửi kèm Token: $token")
         }
 
         chain.proceed(builder.build())

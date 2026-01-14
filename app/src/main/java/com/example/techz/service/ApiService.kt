@@ -23,6 +23,12 @@ import retrofit2.http.Query
 
 interface ApiService {
 
+    @GET("api/order/detail/{orderId}")
+    suspend fun getOrderDetail(@Path("orderId") orderId: Int): OrderDetailResponse
+
+    @POST("api/payment/momo/create")
+    fun createMomoPayment(@Body request: MomoPaymentRequest): Call<MomoResponse>
+
     @GET("api/vouchers")
     fun getAvailableVouchers(): Call<List<Voucher>>
 

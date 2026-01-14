@@ -27,7 +27,8 @@ data class AuthResponse(
     @SerializedName("message") val message: String,
     @SerializedName("role") val role: String,
     @SerializedName("token") val token: String?,
-    @SerializedName("user") val user: User? // Có thể null
+    @SerializedName("user") val user: User?, // Có thể null
+    @SerializedName("orderId") val orderId: Int?
 )
 
 // 3. Body gửi lên khi Login
