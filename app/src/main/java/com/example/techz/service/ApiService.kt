@@ -11,10 +11,7 @@ import com.example.techz.model.OrderRequest
 import com.example.techz.model.Product
 import com.example.techz.model.RegisterRequest
 import com.example.techz.model.UpdateProfileRequest
-
-//
 import com.example.techz.model.*
-
 import retrofit2.Call
 import retrofit2.http.GET
 import retrofit2.Retrofit
@@ -24,6 +21,7 @@ import retrofit2.http.DELETE
 import retrofit2.http.HTTP
 import retrofit2.http.POST
 import retrofit2.http.Path
+import retrofit2.http.Query
 
 interface ApiService {
 
@@ -66,10 +64,26 @@ interface ApiService {
     @POST("api/order/add")
     fun createOrder(@Body orderRequest: OrderRequest): Call<AuthResponse>
 
+    // lấy loại linh kiện
+    @GET("/api/categories")
+    fun getCategories(): Call<List<String>>
+
+    //lọc theo loại
+    @GET("/api/products/category/{type}")
+    fun filterByCategory(@Path("type") type: String): Call<List<Product>>
+
+    //tìm kiếm + debounce
+    @GET("/api/search")
+    fun searchByName(@Query("q") query: String): Call<List<Product>>
+
+
+
 }
 
 object RetrofitClient {
-    private const val BASE_URL = "http://160.250.247.5:3000/"
+
+    private const val BASE_URL = "http://103.228.36.78:3000/"
+    //private const val BASE_URL = "http://160.250.247.5:3000/"
     //private const val BASE_URL = "http://10.0.2.2:3000/"
     val instance: ApiService by lazy {
         val retrofit = Retrofit.Builder()

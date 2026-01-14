@@ -76,7 +76,7 @@ fun AppNavGraph(
                     navController.navigate("detail/$productId")
                 },
                 onCategoryClick = { category ->
-                    navController.navigate("${Screen.ProductList.route}?category=$category")
+                    navController.navigate("${Screen.ProductList.route}/$category")
                 },
                 onGoToCart = { navController.navigate(Screen.Cart.route) },
                 onViewAll = { navController.navigate(Screen.ProductList.route) }
@@ -84,16 +84,17 @@ fun AppNavGraph(
         }
 
         composable(
-            route = "${Screen.ProductList.route}?category={category}",
-            arguments = listOf(
-                navArgument("category") { nullable = true }
-            )
+            route = "${Screen.ProductList.route}/{category}",
+            arguments = listOf(navArgument("category") {
+                type = NavType.StringType
+                defaultValue = "All"
+                nullable =true })
         ) { backStackEntry ->
             val category = backStackEntry.arguments?.getString("category")
 
             ProductListScreen(
                 navController = navController,
-                initialCategory = category,
+                categoryType = category,
                 onProductClick = { id ->
                     navController.navigate("detail/$id")
                 },
@@ -104,11 +105,9 @@ fun AppNavGraph(
             CartScreen(
                 onBack = { navController.popBackStack() },
                 onCheckout = {
-                    // Xử lý sau khi thanh toán thành công (VD: về trang chủ)
                     navController.navigate("home")
                 },
                 onRequireLogin = {
-                    // Chuyển hướng sang màn hình đăng nhập
                     navController.navigate("login")
                 }
             )
