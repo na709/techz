@@ -12,8 +12,8 @@ data class OrderRequest(
     @SerializedName("so_dien_thoai")
     val phone: String,
 
-    @SerializedName("phuong_thuc_thanh_toan")
-    val paymentMethod: String,
+    @SerializedName("id_phuong_thuc")
+    val id_phuong_thuc: Int,
 
     @SerializedName("tong_tien")
     val totalPrice: Double,
