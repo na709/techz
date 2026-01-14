@@ -15,10 +15,12 @@ import retrofit2.Response
 object CartManager {
     val cartItems = mutableStateListOf<CartItem>()
 
+    // Hàm tính tổng tiền gốc (Chưa trừ giảm giá)
     fun getTotalPrice(): Double {
         return cartItems.sumOf { it.product.price * it.quantity }
     }
 
+    // 1. Load giỏ hàng từ Server
     fun loadCart(context: Context) {
         val userId = UserSession.currentUserId ?: return
 
@@ -30,10 +32,12 @@ object CartManager {
                 }
             }
             override fun onFailure(call: Call<List<CartItem>>, t: Throwable) {
+                // Log lỗi nếu cần
             }
         })
     }
 
+    // 2. Cập nhật số lượng
     fun updateQuantity(context: Context, productId: Int, change: Int) {
         val index = cartItems.indexOfFirst { it.product.id == productId }
         if (index == -1) return
@@ -46,6 +50,7 @@ object CartManager {
             return
         }
 
+        // Cập nhật UI ngay lập tức (Optimistic Update)
         cartItems[index] = currentItem.copy(quantity = newQuantity)
 
         val userId = UserSession.currentUserId ?: return
@@ -54,6 +59,7 @@ object CartManager {
         RetrofitClient.instance.updateQuantity(request).enqueue(object : Callback<AuthResponse> {
             override fun onResponse(call: Call<AuthResponse>, response: Response<AuthResponse>) {
                 if (!response.isSuccessful) {
+                    // Lỗi server -> Trả lại số cũ
                     cartItems[index] = currentItem
                     Toast.makeText(context, "Lỗi cập nhật: ${response.message()}", Toast.LENGTH_SHORT).show()
                 }
@@ -65,6 +71,7 @@ object CartManager {
         })
     }
 
+    // 3. Xóa sản phẩm
     fun removeProduct(context: Context, productId: Int) {
         val userId = UserSession.currentUserId
 
@@ -73,8 +80,10 @@ object CartManager {
             return
         }
 
+        // Backup để rollback nếu lỗi
         val itemBackup = cartItems.find { it.product.id == productId }
 
+        // Xóa UI ngay
         cartItems.removeIf { it.product.id == productId }
 
         val request = CartRequest(userId, productId, 0)
@@ -95,6 +104,7 @@ object CartManager {
         })
     }
 
+    // 4. Đặt hàng (Đã sửa lỗi thiếu tham số voucherId)
     fun placeOrder(
         context: Context,
         paymentMethod: String,
@@ -121,10 +131,11 @@ object CartManager {
             return
         }
 
-        // giá sau voucher
+        // 1. Tính giá cuối cùng
         val rawTotal = getTotalPrice()
         val finalPrice = (rawTotal - discount).coerceAtLeast(0.0)
 
+        // 2. QUAN TRỌNG: Chuyển đổi từ CartItem sang OrderDetailRequest
         val listSanPhamGuiLenServer = cartItems.map { item ->
             OrderDetailRequest(
                 productId = item.product.id,
@@ -133,28 +144,31 @@ object CartManager {
             )
         }
 
+        // 3. Tạo Request khớp với Model OrderRequest mới của bạn
         val orderRequest = OrderRequest(
             userId = userId,
             address = address,
             phone = phone,
             paymentMethod = paymentMethod,
             totalPrice = finalPrice,
-            cartItems = listSanPhamGuiLenServer,
+
+            cartItems = listSanPhamGuiLenServer, // <--- Truyền list đã convert vào đây
+
             voucherId = voucherId,
             discountAmount = discount
         )
 
-        // call API
+        // 4. Gọi API
         RetrofitClient.instance.createOrder(orderRequest).enqueue(object : Callback<AuthResponse> {
             override fun onResponse(call: Call<AuthResponse>, response: Response<AuthResponse>) {
                 if (response.isSuccessful && response.body()?.success == true) {
                     val orderIdFromServer = response.body()?.orderId
 
                     if (paymentMethod == "Ví Momo" && orderIdFromServer != null) {
-                        // call momo
+                        // Nếu chọn Momo -> Gọi hàm xử lý Momo riêng
                         initiateMomoPayment(context, orderIdFromServer, finalPrice.toLong(), onSuccess)
                     } else {
-                        // call cod
+                        // Nếu là Tiền mặt (COD) -> Xử lý như cũ
                         cartItems.clear()
                         Toast.makeText(context, "Đặt hàng thành công!", Toast.LENGTH_SHORT).show()
                         onSuccess()
@@ -203,6 +217,7 @@ object CartManager {
             }
         })
     }
+    // Hàm phụ xóa giỏ hàng server
     private fun clearServerCart(userId: Int) {
         RetrofitClient.instance.clearCart(userId).enqueue(object : Callback<AuthResponse> {
             override fun onResponse(c: Call<AuthResponse>, r: Response<AuthResponse>) {}

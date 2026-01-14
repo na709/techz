@@ -51,8 +51,7 @@ data class OrderInfo(
     @SerializedName("tong_tien") val tong_tien: Double,
     @SerializedName("trang_thai") val trang_thai: String,
     @SerializedName("diachi_giao_hang") val diachi_giao_hang: String,
-    @SerializedName("ghi_chu") val ghi_chu: String,
-    val trang_thai_thanh_toan: String? = null
+    @SerializedName("ghi_chu") val ghi_chu: String
 )
 
 data class OrderDetailItem(

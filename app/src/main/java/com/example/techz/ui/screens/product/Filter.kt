@@ -48,6 +48,7 @@ fun FilterDrawer(
         RetrofitClient.instance.getCategories().enqueue(object : Callback<List<String>> {
             override fun onResponse(call: Call<List<String>>, response: Response<List<String>>) {
                 if (response.isSuccessful) {
+                    // Cập nhật danh sách từ Server
                     apiCategories = response.body() ?: emptyList()
                 }
             }
