@@ -39,7 +39,7 @@ import kotlin.math.abs
 @Composable
 fun ProductDetailScreen(
     product: Product,
-    navController: NavController,
+    navController: NavController, // <-- Đã thêm tham số này
     onBack: () -> Unit,
     onProductClick: (Product) -> Unit
 ) {

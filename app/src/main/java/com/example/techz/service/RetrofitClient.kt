@@ -12,22 +12,25 @@ import java.util.concurrent.TimeUnit
 object RetrofitClient {
 
 
+
     private const val BASE_URL = "https://dvna.site/"
     //private const val BASE_URL = "http://103.228.36.78:3000/"
 
-    // debug logcat
+    // 1. Cấu hình Logging (Để xem API gửi gì, nhận gì trong Logcat)
     private val loggingInterceptor = HttpLoggingInterceptor().apply {
-        //LEVEL.BODY
+        // Chọn LEVEL.BODY để xem cả nội dung JSON trả về (Rất quan trọng để debug lỗi)
         level = HttpLoggingInterceptor.Level.BODY
     }
 
-    // thêm header cho auth
+    // 2. Cấu hình Auth Interceptor (Tự động thêm Token vào Header)
     private val authInterceptor = Interceptor { chain ->
         val originalRequest = chain.request()
         val builder = originalRequest.newBuilder()
 
+        // Lấy token từ UserSession
         val token = UserSession.token
 
+        // Nếu có token thì thêm vào Header
         if (!token.isNullOrEmpty()) {
             builder.addHeader("Authorization", "Bearer $token")
             Log.d("API_AUTH", "Đang gửi kèm Token: $token")
@@ -36,18 +39,19 @@ object RetrofitClient {
         chain.proceed(builder.build())
     }
 
+    // 3. Cấu hình OkHttpClient (Kết hợp 2 cái trên)
     private val okHttpClient = OkHttpClient.Builder()
-        .addInterceptor(loggingInterceptor)
-        .addInterceptor(authInterceptor)
-        .connectTimeout(30, TimeUnit.SECONDS)
-        .readTimeout(30, TimeUnit.SECONDS)
+        .addInterceptor(loggingInterceptor) // Gắn logging
+        .addInterceptor(authInterceptor)    // Gắn tự động thêm Token
+        .connectTimeout(30, TimeUnit.SECONDS) // Thời gian chờ kết nối
+        .readTimeout(30, TimeUnit.SECONDS)    // Thời gian chờ đọc dữ liệu
         .build()
 
     // 4. Khởi tạo Retrofit
     val instance: ApiService by lazy {
         Retrofit.Builder()
             .baseUrl(BASE_URL)
-            .client(okHttpClient)
+            .client(okHttpClient) // <--- Quan trọng: Phải gắn client vào đây
             .addConverterFactory(GsonConverterFactory.create())
             .build()
             .create(ApiService::class.java)

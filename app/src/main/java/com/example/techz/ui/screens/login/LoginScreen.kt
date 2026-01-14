@@ -1,6 +1,5 @@
 package com.example.techz.ui.screens.login
-//
-import android.content.Context
+
 import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
@@ -20,23 +19,23 @@ import com.example.techz.model.AuthResponse
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
-import com.example.techz.model.LoginRequest // File model request
+import com.example.techz.model.LoginRequest
 import com.example.techz.service.RetrofitClient
 import com.example.techz.service.UserSession
-import com.example.techz.model.User
+
 @Composable
-fun LoginScreen(onLoginSuccess: (String) -> Unit,
-                onClickRegister: () -> Unit) {
+fun LoginScreen(
+    onLoginSuccess: (String) -> Unit,
+    onClickRegister: () -> Unit,
+) {
     val context = LocalContext.current
 
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var isLoading by remember { mutableStateOf(false) }
 
-    val logoUrl = "http://160.250.247.5/images/logo.jpg"
-    //val logoUrl = "https://dvna.site/images/logo.jpg"
+    val logoUrl = "https://s3.cloudfly.vn/techz-product-images/images/logo.jpg"
     val brandColor = Color(0xFF00A9FF)
-
 
     fun handleLogin() {
         if (username.isBlank() || password.isBlank()) {
@@ -44,22 +43,30 @@ fun LoginScreen(onLoginSuccess: (String) -> Unit,
             return
         }
 
+        isLoading = true
+
         val request = LoginRequest(username = username, password = password)
         RetrofitClient.instance.loginUser(request).enqueue(object : Callback<AuthResponse> {
             override fun onResponse(call: Call<AuthResponse>, response: Response<AuthResponse>) {
-                //new
+                isLoading = false
+
                 if (response.isSuccessful && response.body()?.success == true) {
                     val authData = response.body()
                     val user = authData?.user
-                    val role = authData?.role ?:"user"
-                    val token = authData?.token
-                    user?.let {
-                        UserSession.login(context, it,role,token)
+                    val role = authData?.role ?: "user"
+                    val authToken = authData?.token
+
+                    if (user != null) {
+                        UserSession.login(context, user, role, authToken)
+
+                        Toast.makeText(context, "Xin chào ${user.name}!", Toast.LENGTH_SHORT).show()
+                        onLoginSuccess(role)
+                    } else {
+                        Toast.makeText(context, "Lỗi: Không tìm thấy thông tin người dùng", Toast.LENGTH_SHORT).show()
                     }
-                    Toast.makeText(context, "Xin chào ${user?.name}!", Toast.LENGTH_SHORT).show()
-                    onLoginSuccess(role)
                 } else {
-                    Toast.makeText(context, "Sai tài khoản hoặc mật khẩu!", Toast.LENGTH_SHORT).show()
+                    val msg = response.body()?.message ?: "Sai tài khoản hoặc mật khẩu!"
+                    Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
                 }
             }
 
@@ -139,8 +146,8 @@ fun LoginScreen(onLoginSuccess: (String) -> Unit,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
-            horizontalArrangement = Arrangement.Center, // Căn giữa toàn bộ dòng
-            verticalAlignment = Alignment.CenterVertically // Căn giữa theo chiều dọc
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
                 text = "Chưa có tài khoản?",

@@ -4,6 +4,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.example.techz.model.User
+import android.util.Base64
+import org.json.JSONObject
 
 object UserSession {
     var token by mutableStateOf<String?>(null)
@@ -80,17 +82,44 @@ object UserSession {
     fun initSession(context: Context) {
         val sharedPref = context.getSharedPreferences("TechZ_Prefs", Context.MODE_PRIVATE)
 
-        val savedId = sharedPref.getInt("USER_ID", -1)
         val savedToken = sharedPref.getString("ACCESS_TOKEN", null)
 
-        if (savedId != -1) {
-            currentUserId = savedId
-            token = savedToken
-            currentUserName = sharedPref.getString("USER_NAME", null)
-            currentUserRole = sharedPref.getString("USER_ROLE", "user")
-            currentUserPhone = sharedPref.getString("USER_PHONE", "")
-            currentUserAddress = sharedPref.getString("USER_ADDRESS", "")
+        // 1. Kiểm tra: Có token VÀ Token chưa hết hạn
+        if (savedToken != null && !isTokenExpired(savedToken)) {
+            val savedId = sharedPref.getInt("USER_ID", -1)
+            if (savedId != -1) {
+                currentUserId = savedId
+                token = savedToken // Gán token để RetrofitClient đọc được
+                currentUserName = sharedPref.getString("USER_NAME", null)
+                currentUserRole = sharedPref.getString("USER_ROLE", "user")
+                currentUserPhone = sharedPref.getString("USER_PHONE", "")
+                currentUserAddress = sharedPref.getString("USER_ADDRESS", "")
+            }
+        } else {
+            // 2. Nếu token có nhưng đã hết hạn -> Xóa session (Logout)
+            if (savedToken != null) {
+                logout(context)
+            }
         }
+    }
+    private fun isTokenExpired(token: String): Boolean {
+        try {
+            val parts = token.split(".")
+            if (parts.size < 2) return true
+
+            val payload = String(Base64.decode(parts[1], Base64.URL_SAFE))
+            val jsonObject = JSONObject(payload)
+
+            // Lấy thời gian hết hạn (exp)
+            if (jsonObject.has("exp")) {
+                val exp = jsonObject.getLong("exp")
+                val now = System.currentTimeMillis() / 1000
+                return now > exp
+            }
+        } catch (e: Exception) {
+            return true
+        }
+        return false
     }
 
 }

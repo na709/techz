@@ -31,6 +31,7 @@ fun BannerScroll(
     bannerUrls: List<String>,
     modifier: Modifier = Modifier
 ) {
+    // State quản lý trang hiện tại
     val pagerState = rememberPagerState(pageCount = { bannerUrls.size })
     val brandColor = Color(0xFF00A9FF)
 
@@ -84,6 +85,7 @@ fun BannerScroll(
             repeat(bannerUrls.size) { iteration ->
                 val isSelected = pagerState.currentPage == iteration
 
+                // effect đổi màu
                 val color by animateColorAsState(
                     targetValue = if (isSelected) brandColor else Color.LightGray,
                     label = "color"

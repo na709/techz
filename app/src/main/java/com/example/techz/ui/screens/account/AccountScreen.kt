@@ -136,7 +136,7 @@ fun AccountScreen(
 
                 Spacer(modifier = Modifier.width(16.dp))
 
-                // Nút Đăng ký (Outlined Button)
+
                 OutlinedButton(
                     onClick = onGoToRegister,
                     modifier = Modifier

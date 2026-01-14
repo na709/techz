@@ -1,6 +1,8 @@
 package com.example.techz.service
 
 import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import android.widget.Toast
 import androidx.compose.runtime.mutableStateListOf
 import com.example.techz.model.*
@@ -9,12 +11,17 @@ import retrofit2.Callback
 import retrofit2.Response
 
 object CartManager {
+    // State chứa danh sách sản phẩm trong giỏ (Tự động update UI Jetpack Compose)
     val cartItems = mutableStateListOf<CartItem>()
 
+    // Hàm tính tổng tiền gốc (Chưa trừ giảm giá)
     fun getTotalPrice(): Double {
         return cartItems.sumOf { it.product.price * it.quantity }
     }
 
+    // ------------------------------------------------------------------
+    // 1. Load giỏ hàng từ Server
+    // ------------------------------------------------------------------
     fun loadCart(context: Context) {
         val userId = UserSession.currentUserId ?: return
         RetrofitClient.instance.getCart(userId).enqueue(object : Callback<List<CartItem>> {
@@ -24,47 +31,85 @@ object CartManager {
                     response.body()?.let { cartItems.addAll(it) }
                 }
             }
-            override fun onFailure(call: Call<List<CartItem>>, t: Throwable) {}
+            override fun onFailure(call: Call<List<CartItem>>, t: Throwable) {
+                // Có thể log lỗi ở đây
+            }
         })
     }
 
+    // ------------------------------------------------------------------
+    // 2. Cập nhật số lượng
+    // ------------------------------------------------------------------
     fun updateQuantity(context: Context, productId: Int, change: Int) {
         val index = cartItems.indexOfFirst { it.product.id == productId }
         if (index == -1) return
+
         val currentItem = cartItems[index]
         val newQuantity = currentItem.quantity + change
-        if (newQuantity < 1) return
 
+        // Kiểm tra số lượng tối thiểu
+        if (newQuantity < 1) {
+            Toast.makeText(context, "Số lượng tối thiểu là 1", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        // Cập nhật UI ngay lập tức (Optimistic Update)
         cartItems[index] = currentItem.copy(quantity = newQuantity)
+
         val userId = UserSession.currentUserId ?: return
         RetrofitClient.instance.updateQuantity(CartRequest(userId, productId, newQuantity)).enqueue(object : Callback<AuthResponse> {
             override fun onResponse(call: Call<AuthResponse>, response: Response<AuthResponse>) {
-                if (!response.isSuccessful) cartItems[index] = currentItem
+                if (!response.isSuccessful) {
+                    // Lỗi server -> Rollback lại số lượng cũ
+                    cartItems[index] = currentItem
+                    Toast.makeText(context, "Lỗi cập nhật: ${response.message()}", Toast.LENGTH_SHORT).show()
+                }
             }
             override fun onFailure(call: Call<AuthResponse>, t: Throwable) {
+                // Lỗi mạng -> Rollback
                 cartItems[index] = currentItem
+                Toast.makeText(context, "Lỗi mạng!", Toast.LENGTH_SHORT).show()
             }
         })
     }
 
+    // ------------------------------------------------------------------
+    // 3. Xóa sản phẩm
+    // ------------------------------------------------------------------
     fun removeProduct(context: Context, productId: Int) {
-        val userId = UserSession.currentUserId ?: return
+        val userId = UserSession.currentUserId
+        if (userId == null) {
+            Toast.makeText(context, "Vui lòng đăng nhập!", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        // Backup để rollback nếu lỗi
         val itemBackup = cartItems.find { it.product.id == productId }
+
+        // Xóa UI ngay
         cartItems.removeIf { it.product.id == productId }
+
+        // Gọi API xóa
         RetrofitClient.instance.removeFromCart(CartRequest(userId, productId, 0)).enqueue(object : Callback<AuthResponse> {
             override fun onResponse(call: Call<AuthResponse>, response: Response<AuthResponse>) {
-                if (!response.isSuccessful && itemBackup != null) cartItems.add(itemBackup)
+                if (!response.isSuccessful && itemBackup != null) {
+                    cartItems.add(itemBackup) // Rollback
+                    Toast.makeText(context, "Lỗi xóa sản phẩm", Toast.LENGTH_SHORT).show()
+                }
             }
             override fun onFailure(call: Call<AuthResponse>, t: Throwable) {
-                if (itemBackup != null) cartItems.add(itemBackup)
+                if (itemBackup != null) cartItems.add(itemBackup) // Rollback
+                Toast.makeText(context, "Lỗi mạng, hoàn tác xóa", Toast.LENGTH_SHORT).show()
             }
         })
     }
 
-    // --- HÀM PLACE ORDER ĐÃ FIX ---
+    // ------------------------------------------------------------------
+    // 4. Đặt hàng (Đã Merge logic chuẩn)
+    // ------------------------------------------------------------------
     fun placeOrder(
         context: Context,
-        id_phuong_thuc: Int, // Nhận ID (1, 2, 3)
+        id_phuong_thuc: Int, // 1: COD, 2: MOMO, 3: VNPAY...
         voucherId: Int?,
         discount: Double,
         onSuccess: () -> Unit
@@ -87,69 +132,95 @@ object CartManager {
             return
         }
 
+        // 1. Tính toán giá tiền
         val rawTotal = getTotalPrice()
         val finalPrice = (rawTotal - discount).coerceAtLeast(0.0)
 
-        // Map data chi tiết
-        val listItems = cartItems.map {
-            OrderDetailRequest(it.product.id, it.quantity, it.product.price)
+        // 2. Map dữ liệu cart sang model OrderDetailRequest
+        val listOrderDetails = cartItems.map { item ->
+            OrderDetailRequest(
+                productId = item.product.id,
+                quantity = item.quantity,
+                price = item.product.price
+            )
         }
 
-        // Tạo Request chuẩn
-        val request = OrderRequest(
+        // 3. Tạo Request đặt hàng
+        val orderRequest = OrderRequest(
             userId = userId,
             address = address,
             phone = phone,
             totalPrice = finalPrice,
-            cartItems = listItems,
+            cartItems = listOrderDetails,
             voucherId = voucherId,
             discountAmount = discount,
-            id_phuong_thuc = id_phuong_thuc // <--- QUAN TRỌNG: Gửi ID này đi
+            id_phuong_thuc = id_phuong_thuc
         )
 
-        RetrofitClient.instance.createOrder(request).enqueue(object : Callback<AuthResponse> {
+        // 4. Gọi API Create Order
+        RetrofitClient.instance.createOrder(orderRequest).enqueue(object : Callback<AuthResponse> {
             override fun onResponse(call: Call<AuthResponse>, response: Response<AuthResponse>) {
-                if (response.isSuccessful && response.body()?.success == true) {
-                    val orderId = response.body()?.orderId
+                val body = response.body()
+                if (response.isSuccessful && body?.success == true) {
+                    val orderId = body.orderId // Lấy OrderID từ server trả về
 
-                    // ID = 2 là Momo
+                    // --- XỬ LÝ THANH TOÁN ---
                     if (id_phuong_thuc == 2 && orderId != null) {
+                        // Nếu chọn Ví Momo -> Gọi hàm thanh toán Momo
                         initiateMomoPayment(context, orderId, finalPrice.toLong(), onSuccess)
                     } else {
-                        // COD hoặc ATM
-                        cartItems.clear()
-                        clearServerCart(userId)
-                        Toast.makeText(context, "Đặt hàng thành công!", Toast.LENGTH_SHORT).show()
-                        onSuccess()
+                        // Nếu là Tiền mặt (COD) hoặc ATM thường -> Thành công luôn
+                        handleOrderSuccess(userId, context, onSuccess)
                     }
                 } else {
-                    Toast.makeText(context, response.body()?.message ?: "Lỗi Server", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, body?.message ?: "Đặt hàng thất bại", Toast.LENGTH_SHORT).show()
                 }
             }
+
             override fun onFailure(call: Call<AuthResponse>, t: Throwable) {
-                Toast.makeText(context, "Lỗi mạng: ${t.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, "Lỗi kết nối: ${t.message}", Toast.LENGTH_SHORT).show()
             }
         })
     }
 
+    // --- CÁC HÀM PHỤ TRỢ (HELPER FUNCTIONS) ---
+
+    // Xử lý khi đặt hàng thành công (Xóa giỏ hàng UI & Server, thông báo)
+    private fun handleOrderSuccess(userId: Int, context: Context, onSuccess: () -> Unit) {
+        cartItems.clear() // Xóa UI
+        clearServerCart(userId) // Xóa Database Server
+        Toast.makeText(context, "Đặt hàng thành công!", Toast.LENGTH_SHORT).show()
+        onSuccess() // Callback điều hướng về Home/Success
+    }
+
+    // Gọi API lấy link thanh toán Momo
     private fun initiateMomoPayment(context: Context, orderId: Int, amount: Long, onSuccess: () -> Unit) {
         val req = MomoPaymentRequest(orderId.toString(), amount, "Thanh toan don #$orderId")
         RetrofitClient.instance.createMomoPayment(req).enqueue(object : Callback<MomoResponse> {
             override fun onResponse(call: Call<MomoResponse>, response: Response<MomoResponse>) {
                 if (response.body()?.success == true) {
-                    val intent = android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(response.body()?.payUrl))
-                    context.startActivity(intent)
-                    cartItems.clear()
-                    UserSession.currentUserId?.let { clearServerCart(it) }
-                    onSuccess()
+                    val payUrl = response.body()?.payUrl
+                    if (!payUrl.isNullOrEmpty()) {
+                        // Mở app Momo hoặc Web
+                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(payUrl))
+                        context.startActivity(intent)
+
+                        // Sau khi mở Momo thì coi như đặt hàng xong (Dọn dẹp giỏ hàng)
+                        // (Lưu ý: Logic chuẩn cần check IPN callback, nhưng tạm thời clear luôn cho UX)
+                        val userId = UserSession.currentUserId
+                        if (userId != null) handleOrderSuccess(userId, context, onSuccess)
+                    }
                 } else {
-                    Toast.makeText(context, "Lỗi Momo: ${response.body()?.message}", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, "Lỗi tạo link Momo: ${response.body()?.message}", Toast.LENGTH_SHORT).show()
                 }
             }
-            override fun onFailure(call: Call<MomoResponse>, t: Throwable) {}
+            override fun onFailure(call: Call<MomoResponse>, t: Throwable) {
+                Toast.makeText(context, "Lỗi mạng Momo", Toast.LENGTH_SHORT).show()
+            }
         })
     }
 
+    // Xóa sạch giỏ hàng trên Server
     private fun clearServerCart(userId: Int) {
         RetrofitClient.instance.clearCart(userId).enqueue(object : Callback<AuthResponse> {
             override fun onResponse(c: Call<AuthResponse>, r: Response<AuthResponse>) {}

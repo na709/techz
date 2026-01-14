@@ -1,5 +1,6 @@
 package com.example.techz.ui.screens.admin
-//
+
+import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -8,50 +9,140 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ExitToApp
-import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.rememberNavController
+import com.example.techz.model.AuthResponse
+import com.example.techz.model.OrderActionRequest
+import com.example.techz.model.OrderResponse
+import com.example.techz.service.RetrofitClient
+import com.example.techz.service.UserSession // Import UserSession
 import com.example.techz.ui.components.TechZBottomBarFull
 import com.example.techz.ui.navigation.Screen
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
+import java.text.NumberFormat
+import java.util.Locale
 
-// --- DATA MODELS ---
-enum class OrderStatus(val label: String, val color: Color) {
-    PENDING("Chờ xác nhận", Color(0xFFFF9800)),
-    SHIPPING("Đang giao", Color(0xFF2196F3)),
-    DELIVERED("Đã giao", Color(0xFF4CAF50)),
-    CANCELLED("Hủy", Color(0xFFF44336))
+// --- 1. CÁC HÀM TIỆN ÍCH ---
+fun getStatusColor(status: String): Color {
+    return when (status.lowercase()) {
+        "chờ xác nhận" -> Color(0xFFFF9800)
+        "đang vận chuyển", "đang giao" -> Color(0xFF2196F3)
+        "đã giao" -> Color(0xFF4CAF50)
+        "đã hủy", "hủy" -> Color(0xFFF44336)
+        else -> Color.Gray
+    }
 }
 
-data class Order(
-val id: String,
-val name: String,
-val date: String,
-val time: String,
-val totalPrice: String,
-val quantity: Int,
-val status: OrderStatus
-)
+fun formatPrice(price: Int): String {
+    return NumberFormat.getNumberInstance(Locale.US).format(price).replace(",", ".") + " đ"
+}
 
+// --- 2. MÀN HÌNH CHÍNH ---
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AdminOrderScreen(navController: NavHostController) {
-    // Tạo danh sách dài hơn để test cuộn
-    val orders = List(10) { index ->
-        when (index % 4) {
-            0 -> Order("DH00$index", "MacBook Pro M2", "20/10/2023", "10:30", "32.000.000đ", 1, OrderStatus.SHIPPING)
-            1 -> Order("DH00$index", "iPhone 15 Pro", "21/10/2023", "09:15", "34.990.000đ", 2, OrderStatus.PENDING)
-            2 -> Order("DH00$index", "Sony WH-1000XM5", "22/10/2023", "14:20", "8.500.000đ", 1, OrderStatus.DELIVERED)
-            else -> Order("DH00$index", "Samsung S23", "22/10/2023", "15:00", "22.000.000đ", 1, OrderStatus.CANCELLED)
+    val context = LocalContext.current
+
+    // --- THAY ĐỔI 1: LẤY ID TỪ USERSESSION ---
+    // Không dùng SharedPreferences "AppPrefs" nữa
+    val currentAdminId = UserSession.currentUserId ?: -1
+
+    var orderList by remember { mutableStateOf<List<OrderResponse>>(emptyList()) }
+    var isLoading by remember { mutableStateOf(true) }
+    val tabs = listOf("Tất cả", "Chờ Xác Nhận", "Đang Vận Chuyển", "Đã Giao", "Đã Hủy")
+    var selectedTabIndex by remember { mutableIntStateOf(0) }
+
+    fun processOrderAction(orderId: Int, action: String) {
+        if (currentAdminId == -1) {
+            Toast.makeText(context, "Lỗi: Phiên đăng nhập hết hạn!", Toast.LENGTH_LONG).show()
+            return
+        }
+
+        val request = OrderActionRequest(orderId = orderId)
+        val apiCall = when (action) {
+            "CONFIRM" -> RetrofitClient.instance.confirmOrder(currentAdminId, request)
+            "CANCEL" -> RetrofitClient.instance.cancelOrder(currentAdminId, request)
+            "DELIVERED" -> RetrofitClient.instance.deliveredOrder(currentAdminId, request)
+            else -> return
+        }
+
+        apiCall.enqueue(object : Callback<AuthResponse> {
+            override fun onResponse(call: Call<AuthResponse>, response: Response<AuthResponse>) {
+                if (response.isSuccessful && response.body()?.success == true) {
+                    val nextStatus = when (action) {
+                        "CONFIRM" -> "Đang Vận Chuyển"
+                        "CANCEL" -> "Đã Hủy"
+                        "DELIVERED" -> "Đã Giao"
+                        else -> ""
+                    }
+
+                    Toast.makeText(context, "Cập nhật thành công!", Toast.LENGTH_SHORT).show()
+
+                    // Cập nhật danh sách tại chỗ (Optimistic Update)
+                    orderList = orderList.map {
+                        if (it.id == orderId) {
+                            it.copy(
+                                status = nextStatus,
+                                paymentStatus = if (action == "DELIVERED") "Đã thanh toán" else it.paymentStatus
+                            )
+                        } else it
+                    }
+                } else {
+                    Toast.makeText(context, "Thất bại: ${response.body()?.message}", Toast.LENGTH_SHORT).show()
+                }
+            }
+            override fun onFailure(call: Call<AuthResponse>, t: Throwable) {
+                Toast.makeText(context, "Lỗi kết nối server", Toast.LENGTH_SHORT).show()
+            }
+        })
+    }
+
+    LaunchedEffect(Unit) {
+        // Đảm bảo Session được load nếu lỡ user reload app ở màn hình này
+        UserSession.initSession(context)
+
+        // Lấy lại ID sau khi init (đề phòng trường hợp biến RAM bị null)
+        val idToCheck = UserSession.currentUserId ?: -1
+
+        if (idToCheck == -1) {
+            isLoading = false
+            Toast.makeText(context, "Vui lòng đăng nhập lại", Toast.LENGTH_SHORT).show()
+            navController.navigate(Screen.Login.route)
+            return@LaunchedEffect
+        }
+
+        RetrofitClient.instance.getAllOrders(idToCheck).enqueue(object : Callback<List<OrderResponse>> {
+            override fun onResponse(call: Call<List<OrderResponse>>, response: Response<List<OrderResponse>>) {
+                isLoading = false
+                if (response.isSuccessful && response.body() != null) {
+                    orderList = response.body()!!.reversed()
+                }
+            }
+            override fun onFailure(call: Call<List<OrderResponse>>, t: Throwable) {
+                isLoading = false
+            }
+        })
+    }
+
+    val filteredList = if (selectedTabIndex == 0) orderList else {
+        val key = tabs[selectedTabIndex]
+        orderList.filter {
+            val s = it.status.lowercase()
+            if (key == "Đang Vận Chuyển") s == "đang vận chuyển" || s == "đang giao"
+            else if (key == "Đã Hủy") s == "đã hủy" || s == "hủy"
+            else s == key.lowercase()
         }
     }
 
@@ -59,73 +150,43 @@ fun AdminOrderScreen(navController: NavHostController) {
         topBar = {
             TopAppBar(
                 title = { Text("Quản Lý Đơn Hàng", fontWeight = FontWeight.Bold, color = Color.White) },
-                actions = {
-                    IconButton(onClick = {navController.navigate(Screen.AdminDashboard.route) {
-
-                        popUpTo(0) { inclusive = true }
-                            }
-                        }
-                    )
-                        {
-                        Icon(Icons.AutoMirrored.Filled.ExitToApp, contentDescription = null, tint = Color.White)
+                navigationIcon = {
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Color.White)
                     }
                 },
+
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color(0xFF03A9F4))
             )
         },
-        bottomBar = {  TechZBottomBarFull(navController = navController)
-        },
+        bottomBar = { TechZBottomBarFull(navController = navController) },
         containerColor = Color.White
     ) { padding ->
-        Column(
-            modifier = Modifier
-                .padding(padding)
-                .fillMaxSize()
-                .background(Color.White)
-        ) {
-            // --- PHẦN CỐ ĐỊNH (KHÔNG CUỘN) ---
-
-            // 1. Tabs
-            val tabs = listOf("Tất cả", "Chờ xác nhận", "Đang giao", "Đã giao", "Hủy")
-            var selectedTabIndex by remember { mutableStateOf(0) }
-
+        Column(modifier = Modifier.padding(padding).fillMaxSize().background(Color(0xFFF5F5F5))) {
             LazyRow(
                 modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
                 contentPadding = PaddingValues(horizontal = 16.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 items(tabs.size) { index ->
-                    FilterTab(
-                        text = tabs[index],
-                        isSelected = index == selectedTabIndex,
-                        onClick = { selectedTabIndex = index }
-                    )
+                    FilterTab(text = tabs[index], isSelected = index == selectedTabIndex, onClick = { selectedTabIndex = index })
                 }
             }
 
-            Divider(color = Color(0xFFEEEEEE), thickness = 1.dp)
-
-            // 2. Header nhỏ
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text("Danh sách đơn hàng", fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                Spacer(modifier = Modifier.width(4.dp))
-                Icon(Icons.Default.KeyboardArrowDown, contentDescription = null, tint = Color.Gray)
-            }
-
-            // --- PHẦN CUỘN ĐƯỢC ---
-            // QUAN TRỌNG: Sử dụng weight(1f) để LazyColumn chiếm hết phần còn lại và kích hoạt thanh cuộn
-            LazyColumn(
-                modifier = Modifier
-                    .weight(1f) // <-- Dòng này giúp danh sách cuộn được
-                    .fillMaxWidth(),
-                contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 20.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                items(orders) { order ->
-                    OrderItem(order)
+            if (isLoading) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
+            } else {
+                LazyColumn(
+                    modifier = Modifier.weight(1f).fillMaxWidth(),
+                    contentPadding = PaddingValues(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    items(filteredList) { order ->
+                        OrderItem(
+                            order = order,
+                            onAction = { action -> processOrderAction(order.id, action) }
+                        )
+                    }
                 }
             }
         }
@@ -133,70 +194,51 @@ fun AdminOrderScreen(navController: NavHostController) {
 }
 
 @Composable
-fun OrderItem(order: Order) {
+fun OrderItem(order: OrderResponse, onAction: (String) -> Unit) {
     Card(
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFF9F9F9)),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(2.dp),
         modifier = Modifier.fillMaxWidth()
     ) {
         Column(modifier = Modifier.padding(12.dp).fillMaxWidth()) {
-
-            // Hàng 1: Thời gian & Trạng thái
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text("${order.date} - ${order.time}", fontSize = 13.sp, color = Color.Gray)
-                Surface(
-                    color = order.status.color.copy(alpha = 0.1f),
-                    shape = RoundedCornerShape(4.dp)
-                ) {
-                    Text(
-                        text = order.status.label,
-                        fontSize = 12.sp,
-                        color = order.status.color,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                    )
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                Text(text = order.date, fontSize = 13.sp, color = Color.Gray)
+                Surface(color = getStatusColor(order.status).copy(alpha = 0.1f), shape = RoundedCornerShape(4.dp)) {
+                    Text(text = order.status, fontSize = 12.sp, color = getStatusColor(order.status), fontWeight = FontWeight.Bold, modifier = Modifier.padding(8.dp, 4.dp))
                 }
             }
+            Divider(modifier = Modifier.padding(vertical = 8.dp), color = Color(0xFFEEEEEE))
+            Text(text = order.productName ?: "Đơn hàng #${order.id}", fontWeight = FontWeight.Bold, fontSize = 16.sp)
 
-            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = Color(0xFFEEEEEE))
+            // 1. Hiển thị Tổng tiền
+            Text(text = "Tổng tiền: ${formatPrice(order.totalPrice)}", color = Color.Red, fontWeight = FontWeight.Bold)
 
-            // Hàng 2: Tên & Giá
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Top
-            ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(order.name, fontWeight = FontWeight.Bold, fontSize = 16.sp, color = Color.Black)
-                    Text("Mã: ${order.id}", fontSize = 12.sp, color = Color.Gray)
-                }
-                Column(horizontalAlignment = Alignment.End) {
-                    Text("Tổng tiền", fontSize = 12.sp, color = Color.Gray)
-                    Text(order.totalPrice, fontWeight = FontWeight.Bold, fontSize = 16.sp, color = Color.Red)
-                }
+            // 2. Hiển thị Trạng thái thanh toán
+            val isPaid = order.paymentStatus == "Đã thanh toán"
+            Column {
+                Text(
+                    text = "Thanh toán: ${order.paymentStatus ?: "Chưa thanh toán"}",
+                    color = if (isPaid) Color(0xFF4CAF50) else Color(0xFFF44336),
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(top = 2.dp)
+                )
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
-            Text("Số lượng: ${order.quantity}", fontSize = 13.sp, color = Color.Gray)
+            Text(text = "Số lượng: ${order.quantity}", fontSize = 13.sp, color = Color.Gray, modifier = Modifier.padding(top = 2.dp))
 
-            // Nút bấm (Logic cũ: Chỉ hiện khi Chờ xác nhận hoặc Đang giao)
-            if (order.status == OrderStatus.PENDING || order.status == OrderStatus.SHIPPING) {
-                Spacer(modifier = Modifier.height(16.dp))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    if (order.status == OrderStatus.PENDING) {
-                        ActionButton(text = "Từ chối", isPrimary = false, modifier = Modifier.weight(1f))
-                        ActionButton(text = "Xác nhận", isPrimary = true, modifier = Modifier.weight(1f))
-                    } else if (order.status == OrderStatus.SHIPPING) {
-                        ActionButton(text = "Hủy đơn", isPrimary = false, modifier = Modifier.weight(1f))
-                        ActionButton(text = "Đã giao", isPrimary = true, modifier = Modifier.weight(1f))
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Giữ nguyên các nút chức năng cũ
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                when (order.status.lowercase()) {
+                    "chờ xác nhận" -> {
+                        ActionButton("Từ chối", false, Modifier.weight(1f)) { onAction("CANCEL") }
+                        ActionButton("Duyệt đơn", true, Modifier.weight(1f)) { onAction("CONFIRM") }
+                    }
+                    "đang vận chuyển", "đang giao" -> {
+                        ActionButton("Xác nhận đã giao", true, Modifier.weight(1f)) { onAction("DELIVERED") }
                     }
                 }
             }
@@ -204,7 +246,19 @@ fun OrderItem(order: Order) {
     }
 }
 
-// --- Component phụ ---
+@Composable
+fun ActionButton(text: String, isPrimary: Boolean, modifier: Modifier = Modifier, onClick: () -> Unit) {
+    Button(
+        onClick = onClick,
+        modifier = modifier.height(40.dp),
+        shape = RoundedCornerShape(8.dp),
+        colors = ButtonDefaults.buttonColors(containerColor = if (isPrimary) Color(0xFF03A9F4) else Color.White),
+        border = if (!isPrimary) BorderStroke(1.dp, Color.Gray) else null
+    ) {
+        Text(text, color = if (isPrimary) Color.White else Color.Black, fontWeight = FontWeight.Bold)
+    }
+}
+
 @Composable
 fun FilterTab(text: String, isSelected: Boolean, onClick: () -> Unit) {
     Button(
@@ -214,32 +268,8 @@ fun FilterTab(text: String, isSelected: Boolean, onClick: () -> Unit) {
             contentColor = if (isSelected) Color.White else Color.Black
         ),
         shape = RoundedCornerShape(20.dp),
-        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 0.dp),
         modifier = Modifier.height(36.dp)
     ) {
         Text(text = text, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
     }
-}
-
-@Composable
-fun ActionButton(text: String, isPrimary: Boolean, modifier: Modifier = Modifier) {
-    Button(
-        onClick = { },
-        modifier = modifier.height(40.dp),
-        shape = RoundedCornerShape(8.dp),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = if (isPrimary) Color(0xFF03A9F4) else Color.White
-        ),
-        border = if (!isPrimary) BorderStroke(1.dp, Color.Gray) else null,
-        elevation = ButtonDefaults.buttonElevation(0.dp)
-    ) {
-        Text(text, color = if (isPrimary) Color.White else Color.Black, fontWeight = FontWeight.Bold, fontSize = 14.sp)
-    }
-}
-
-@Preview(showBackground = true, device = "spec:width=411dp,height=891dp")
-@Composable
-fun PreviewOrderScroll() {
-    val navController = rememberNavController()
-    AdminOrderScreen(navController)
 }

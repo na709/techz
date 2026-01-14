@@ -65,12 +65,8 @@ fun CartScreen(
 
     val finalPrice = (rawTotalPrice - discountAmount).coerceAtLeast(0.0)
 
-    // --- 1. KHỞI TẠO DỮ LIỆU ---
-    LaunchedEffect(Unit) {
-        UserSession.initSession(context)
-        CartManager.loadCart(context)
-
-        // Nếu đã đăng nhập -> Gọi API lấy Voucher khả dụng
+    // --- 1. HÀM LOAD VOUCHER RIÊNG BIỆT (Để gọi lại khi cần refresh) ---
+    fun loadVouchers() {
         if (UserSession.isLoggedIn) {
             RetrofitClient.instance.getPaymentMethods().enqueue(object : Callback<List<PaymentMethod>> {
                 override fun onResponse(call: Call<List<PaymentMethod>>, response: Response<List<PaymentMethod>>) {
@@ -90,12 +86,38 @@ fun CartScreen(
                     }
                 }
                 override fun onFailure(call: Call<List<Voucher>>, t: Throwable) {
+                    Toast.makeText(context, "Không tải được danh sách Voucher", Toast.LENGTH_SHORT).show()
                 }
             })
         }
     }
 
-    // --- 2. LOGIC TỰ ĐỘNG CẬP NHẬT KHI GIÁ THAY ĐỔI ---
+    // --- 2. KHỞI TẠO DỮ LIỆU LẦN ĐẦU ---
+    LaunchedEffect(Unit) {
+        UserSession.initSession(context)
+        CartManager.loadCart(context)
+
+        // Nếu đã đăng nhập -> Gọi API lấy Voucher và Phương thức thanh toán
+        if (UserSession.isLoggedIn) {
+            // Load Payment Methods
+            RetrofitClient.instance.getPaymentMethods().enqueue(object : Callback<List<PaymentMethod>> {
+                override fun onResponse(call: Call<List<PaymentMethod>>, response: Response<List<PaymentMethod>>) {
+                    if (response.isSuccessful) {
+                        val methods = response.body() ?: emptyList()
+                        paymentMethods = methods
+                        // Mặc định chọn cái đầu tiên (thường là COD)
+                        if (methods.isNotEmpty()) selectedMethodObj = methods[0]
+                    }
+                }
+                override fun onFailure(call: Call<List<PaymentMethod>>, t: Throwable) {}
+            })
+
+            // Load Vouchers lần đầu
+            loadVouchers()
+        }
+    }
+
+    // --- 3. LOGIC TỰ ĐỘNG CẬP NHẬT KHI GIÁ THAY ĐỔI ---
     // Nếu người dùng xóa bớt sản phẩm khiến tổng tiền < đơn tối thiểu -> Hủy voucher
     LaunchedEffect(rawTotalPrice) {
         selectedVoucher?.let { voucher ->
@@ -137,6 +159,8 @@ fun CartScreen(
                             discountValue = discountAmount,
                             onClick = {
                                 if (UserSession.isLoggedIn) {
+                                    // >>> FIX QUAN TRỌNG: Gọi API load lại voucher mới nhất ngay khi bấm vào <<<
+                                    loadVouchers()
                                     showVoucherDialog = true
                                 } else {
                                     Toast.makeText(context, "Vui lòng đăng nhập để dùng Voucher", Toast.LENGTH_SHORT).show()
