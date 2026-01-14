@@ -38,7 +38,7 @@ fun LoginScreen(
     var password by remember { mutableStateOf("") }
     var isLoading by remember { mutableStateOf(false) }
 
-    val logoUrl = "http://103.228.36.78/images/logo.jpg"
+    val logoUrl = "http://160.250.247.5/images/logo.jpg"
     val brandColor = Color(0xFF00A9FF)
 
 
