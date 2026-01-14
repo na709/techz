@@ -7,7 +7,7 @@ import androidx.navigation.compose.rememberNavController
 import com.example.techz.service.UserSession
 import com.example.techz.ui.navigation.AppNavGraph
 import com.example.techz.ui.navigation.Screen
-import com.example.techz.ui.screens.cart.CartManager
+import com.example.techz.service.CartManager
 //
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -15,18 +15,14 @@ class MainActivity : ComponentActivity() {
 
         UserSession.initSession(this)
         CartManager.loadCart(this)
+        android.util.Log.d("DEBUG_SESSION", "Role: ${UserSession.currentUserRole}, IsAdmin: ${UserSession.isAdmin}")
         setContent {
             val navController = rememberNavController()
-
-            // - Nếu là Admin -> Vào thẳng trang quản lý (AdminHome)
-            // - Nếu là Khách HOẶC User thường -> Vào trang Mua hàng (Home)
             val startScreen = if (UserSession.isLoggedIn && UserSession.isAdmin) {
                 Screen.AdminDashboard.route
             } else {
                 Screen.Home.route
             }
-
-            // 3. Truyền NavController và màn hình bắt đầu vào AppNavGraph
             AppNavGraph(
                 navController = navController,
                 startDestination = startScreen

@@ -1,4 +1,4 @@
-package com.example.techz.ui.screens.cart
+package com.example.techz.service
 
 import android.content.Context
 import android.widget.Toast
@@ -6,10 +6,8 @@ import androidx.compose.runtime.mutableStateListOf
 import com.example.techz.model.AuthResponse
 import com.example.techz.model.CartItem
 import com.example.techz.model.CartRequest
-import com.example.techz.model.OrderDetailRequest // Import model chi tiết
+import com.example.techz.model.OrderDetailRequest
 import com.example.techz.model.OrderRequest
-import com.example.techz.service.RetrofitClient
-import com.example.techz.service.UserSession
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -17,17 +15,14 @@ import retrofit2.Response
 object CartManager {
     val cartItems = mutableStateListOf<CartItem>()
 
+    // Hàm tính tổng tiền gốc (Chưa trừ giảm giá)
     fun getTotalPrice(): Double {
         return cartItems.sumOf { it.product.price * it.quantity }
     }
 
-    // 1. Load giỏ hàng
+    // 1. Load giỏ hàng từ Server
     fun loadCart(context: Context) {
-        val userId = UserSession.currentUserId
-        if (userId == null) {
-            cartItems.clear()
-            return
-        }
+        val userId = UserSession.currentUserId ?: return
 
         RetrofitClient.instance.getCart(userId).enqueue(object : Callback<List<CartItem>> {
             override fun onResponse(call: Call<List<CartItem>>, response: Response<List<CartItem>>) {
@@ -37,10 +32,12 @@ object CartManager {
                 }
             }
             override fun onFailure(call: Call<List<CartItem>>, t: Throwable) {
+                // Log lỗi nếu cần
             }
         })
     }
 
+    // 2. Cập nhật số lượng
     fun updateQuantity(context: Context, productId: Int, change: Int) {
         val index = cartItems.indexOfFirst { it.product.id == productId }
         if (index == -1) return
@@ -53,6 +50,7 @@ object CartManager {
             return
         }
 
+        // Cập nhật UI ngay lập tức (Optimistic Update)
         cartItems[index] = currentItem.copy(quantity = newQuantity)
 
         val userId = UserSession.currentUserId ?: return
@@ -61,81 +59,84 @@ object CartManager {
         RetrofitClient.instance.updateQuantity(request).enqueue(object : Callback<AuthResponse> {
             override fun onResponse(call: Call<AuthResponse>, response: Response<AuthResponse>) {
                 if (!response.isSuccessful) {
-                    // Revert nếu lỗi
-                    cartItems[index] = currentItem.copy(quantity = currentItem.quantity)
-                    Toast.makeText(context, "Lỗi server: ${response.message()}", Toast.LENGTH_SHORT).show()
+                    // Lỗi server -> Trả lại số cũ
+                    cartItems[index] = currentItem
+                    Toast.makeText(context, "Lỗi cập nhật: ${response.message()}", Toast.LENGTH_SHORT).show()
                 }
             }
             override fun onFailure(call: Call<AuthResponse>, t: Throwable) {
-                cartItems[index] = currentItem.copy(quantity = currentItem.quantity)
+                cartItems[index] = currentItem
                 Toast.makeText(context, "Lỗi mạng!", Toast.LENGTH_SHORT).show()
             }
         })
     }
 
-    fun removeFromCart(context: Context, productId: Int) {
-        val userId = UserSession.currentUserId ?: return
-        val request = CartRequest(userId, productId, 0)
-
-        RetrofitClient.instance.removeFromCart(request).enqueue(object : Callback<AuthResponse> {
-            override fun onResponse(call: Call<AuthResponse>, response: Response<AuthResponse>) {
-                if (response.isSuccessful) loadCart(context)
-            }
-            override fun onFailure(call: Call<AuthResponse>, t: Throwable) {}
-        })
-    }
-
+    // 3. Xóa sản phẩm
     fun removeProduct(context: Context, productId: Int) {
-        val userId = UserSession.currentUserId ?: 0
+        val userId = UserSession.currentUserId
 
-        if (userId <= 0) {
+        if (userId == null) {
             Toast.makeText(context, "Vui lòng đăng nhập!", Toast.LENGTH_SHORT).show()
             return
         }
 
-        // Tạo request gửi lên server
+        // Backup để rollback nếu lỗi
+        val itemBackup = cartItems.find { it.product.id == productId }
+
+        // Xóa UI ngay
+        cartItems.removeIf { it.product.id == productId }
+
         val request = CartRequest(userId, productId, 0)
 
         RetrofitClient.instance.removeFromCart(request).enqueue(object : Callback<AuthResponse> {
             override fun onResponse(call: Call<AuthResponse>, response: Response<AuthResponse>) {
                 if (response.isSuccessful) {
-                    // Xóa thành công trên Server -> Xóa khỏi list local để cập nhật UI ngay lập tức
-                    cartItems.removeIf { it.product.id == productId }
                     Toast.makeText(context, "Đã xóa sản phẩm", Toast.LENGTH_SHORT).show()
                 } else {
+                    if (itemBackup != null) cartItems.add(itemBackup) // Rollback
                     Toast.makeText(context, "Lỗi xóa: ${response.message()}", Toast.LENGTH_SHORT).show()
                 }
             }
-
             override fun onFailure(call: Call<AuthResponse>, t: Throwable) {
+                if (itemBackup != null) cartItems.add(itemBackup)
                 Toast.makeText(context, "Lỗi mạng!", Toast.LENGTH_SHORT).show()
             }
         })
     }
-    fun placeOrder(context: Context, paymentMethod: String, onSuccess: () -> Unit) {
+
+    // 4. Đặt hàng (Đã sửa lỗi thiếu tham số voucherId)
+    fun placeOrder(
+        context: Context,
+        paymentMethod: String,
+        voucherId: Int?,
+        discount: Double,
+        onSuccess: () -> Unit
+    ) {
         val userId = UserSession.currentUserId
         if (userId == null) {
             Toast.makeText(context, "Phiên đăng nhập hết hạn!", Toast.LENGTH_SHORT).show()
             return
         }
 
-
         if (cartItems.isEmpty()) {
             Toast.makeText(context, "Giỏ hàng đang trống!", Toast.LENGTH_SHORT).show()
             return
         }
 
-        var address = UserSession.currentUserAddress
-        if (address.isNullOrBlank()) {
-            address = "Khách chưa cập nhật địa chỉ"
+        val address = UserSession.currentUserAddress
+        val phone = UserSession.currentUserPhone
+
+        if (address.isNullOrBlank() || phone.isNullOrBlank()) {
+            Toast.makeText(context, "Vui lòng cập nhật Địa chỉ và SĐT!", Toast.LENGTH_LONG).show()
+            return
         }
 
-        var phone = UserSession.currentUserPhone
-        if (phone.isNullOrBlank()) {
-            phone = "0999999999"
-        }
+        // 1. Tính giá cuối cùng
+        val rawTotal = getTotalPrice()
+        val finalPrice = (rawTotal - discount).coerceAtLeast(0.0)
 
-        val orderDetails = cartItems.map { item ->
+        // 2. QUAN TRỌNG: Chuyển đổi từ CartItem sang OrderDetailRequest
+        val listSanPhamGuiLenServer = cartItems.map { item ->
             OrderDetailRequest(
                 productId = item.product.id,
                 quantity = item.quantity,
@@ -143,32 +144,30 @@ object CartManager {
             )
         }
 
-
+        // 3. Tạo Request khớp với Model OrderRequest mới của bạn
         val orderRequest = OrderRequest(
             userId = userId,
             address = address,
             phone = phone,
             paymentMethod = paymentMethod,
-            totalPrice = getTotalPrice(),
-            cartItems = orderDetails // <--- Truyền danh sách sản phẩm vào đây
+            totalPrice = finalPrice,
+
+            cartItems = listSanPhamGuiLenServer, // <--- Truyền list đã convert vào đây
+
+            voucherId = voucherId,
+            discountAmount = discount
         )
 
+        // 4. Gọi API
         RetrofitClient.instance.createOrder(orderRequest).enqueue(object : Callback<AuthResponse> {
             override fun onResponse(call: Call<AuthResponse>, response: Response<AuthResponse>) {
                 if (response.isSuccessful && response.body()?.success == true) {
-
-
                     cartItems.clear()
-
                     Toast.makeText(context, "Đặt hàng thành công!", Toast.LENGTH_SHORT).show()
                     onSuccess()
 
-                    // Gọi API xóa giỏ hàng trong Database (nếu Server có lưu giỏ hàng riêng)
-                    RetrofitClient.instance.clearCart(userId).enqueue(object : Callback<AuthResponse>{
-                        override fun onResponse(c: Call<AuthResponse>, r: Response<AuthResponse>) {}
-                        override fun onFailure(c: Call<AuthResponse>, t: Throwable) {}
-                    })
-
+                    // Xóa giỏ hàng trên Server
+                    clearServerCart(userId)
                 } else {
                     val errorMsg = response.body()?.message ?: "Lỗi đặt hàng"
                     Toast.makeText(context, errorMsg, Toast.LENGTH_LONG).show()
@@ -178,6 +177,13 @@ object CartManager {
             override fun onFailure(call: Call<AuthResponse>, t: Throwable) {
                 Toast.makeText(context, "Lỗi kết nối: ${t.message}", Toast.LENGTH_SHORT).show()
             }
+        })
+    }
+    // Hàm phụ xóa giỏ hàng server
+    private fun clearServerCart(userId: Int) {
+        RetrofitClient.instance.clearCart(userId).enqueue(object : Callback<AuthResponse> {
+            override fun onResponse(c: Call<AuthResponse>, r: Response<AuthResponse>) {}
+            override fun onFailure(c: Call<AuthResponse>, t: Throwable) {}
         })
     }
 }

@@ -20,6 +20,7 @@ import com.example.techz.ui.screens.account.AccountDetailScreen
 import com.example.techz.ui.screens.account.AccountLoggedScreen
 import com.example.techz.ui.screens.account.AccountOrderScreen
 import com.example.techz.ui.screens.account.AccountScreen
+import com.example.techz.ui.screens.admin.AddVoucherScreen
 import com.example.techz.ui.screens.admin.AdminDashboardScreen
 import com.example.techz.ui.screens.admin.AdminOrderScreen
 import com.example.techz.ui.screens.cart.CartScreen
@@ -36,7 +37,7 @@ fun AppNavGraph(
 ) {
 
 
-    NavHost(navController = navController, startDestination = Screen.Home.route) {
+    NavHost(navController = navController, startDestination = startDestination) {
 
         composable(Screen.Login.route) {
             LoginScreen(
@@ -105,7 +106,7 @@ fun AppNavGraph(
                 onBack = { navController.popBackStack() },
                 onCheckout = {
 
-                    navController.navigate("home")
+                    navController.navigate(Screen.OrderHistory.route)
                 },
                 onRequireLogin = {
                     navController.navigate("login")
@@ -228,9 +229,23 @@ fun AppNavGraph(
                     navController.navigate(Screen.Home.route) {
                         popUpTo(0) { inclusive = true }
                     }
+                },
+                onGoToAddVoucher = {
+                    navController.navigate(Screen.AdminVoucher.route) {
+                        popUpTo(0) { inclusive = true }
+                    }
                 }
             )
         }
+        composable(Screen.AdminVoucher.route) {
+            AddVoucherScreen(
+                navController = navController,
+                onBack ={
+                    navController.navigate(Screen.AdminDashboard.route) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                }
+                )}
         composable(Screen.AdminOrder.route) {
             AdminOrderScreen(navController = navController)
         }

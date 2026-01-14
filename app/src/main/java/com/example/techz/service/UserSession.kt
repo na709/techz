@@ -1,5 +1,4 @@
 package com.example.techz.service
-//
 import android.content.Context
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -7,6 +6,8 @@ import androidx.compose.runtime.setValue
 import com.example.techz.model.User
 
 object UserSession {
+    var token by mutableStateOf<String?>(null)
+        private set
     var currentUserName by mutableStateOf<String?>(null)
         private set
     var currentUserEmail by mutableStateOf<String?>(null)
@@ -24,18 +25,17 @@ object UserSession {
     val isAdmin: Boolean
         get() = currentUserRole == "admin"
     val isLoggedIn: Boolean
-        get() = currentUserId != null
+        get() = currentUserId != null && token != null
 
-    fun login(context: Context, user: User, role: String) {
+    fun login(context: Context, user: User, role: String,authToken: String?) {
         currentUserId = user.id
         currentUserName = user.name
         currentUserRole = role
         currentUserAddress = user.address
         currentUserPhone = user.phone
         currentUserEmail = user.email
+        token = authToken
 
-
-        // Lưu cục bộ để giữ đăng nhập khi tắt app
         val sharedPref = context.getSharedPreferences("TechZ_Prefs", Context.MODE_PRIVATE)
         with(sharedPref.edit()) {
             putInt("USER_ID", user.id)
@@ -44,20 +44,20 @@ object UserSession {
             putString("USER_ROLE", role)
             putString("USER_PHONE", user.phone ?: "")
             putString("USER_ADDRESS", user.address ?: "")
+            putString("ACCESS_TOKEN", authToken)
             apply()
         }
     }
 
-    // gọi khi logout
     fun logout(context: Context) {
         currentUserId = null
         currentUserName = null
         currentUserRole = null
         currentUserPhone = null
         currentUserAddress = null
+        token = null
         val sharedPref = context.getSharedPreferences("TechZ_Prefs", Context.MODE_PRIVATE)
         with(sharedPref.edit()) {
-            //remove("USER_NAME")
             clear()
             apply()
         }
@@ -68,7 +68,6 @@ object UserSession {
         currentUserPhone = phone
         currentUserAddress = address
 
-        // Cập nhật vào ổ cứng (SharedPreferences)
         val sharedPref = context.getSharedPreferences("TechZ_Prefs", Context.MODE_PRIVATE)
         with(sharedPref.edit()) {
             putString("USER_NAME", name)
@@ -82,9 +81,11 @@ object UserSession {
         val sharedPref = context.getSharedPreferences("TechZ_Prefs", Context.MODE_PRIVATE)
 
         val savedId = sharedPref.getInt("USER_ID", -1)
+        val savedToken = sharedPref.getString("ACCESS_TOKEN", null)
 
         if (savedId != -1) {
             currentUserId = savedId
+            token = savedToken
             currentUserName = sharedPref.getString("USER_NAME", null)
             currentUserRole = sharedPref.getString("USER_ROLE", "user")
             currentUserPhone = sharedPref.getString("USER_PHONE", "")

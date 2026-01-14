@@ -19,7 +19,13 @@ data class OrderRequest(
     val totalPrice: Double,
 
     @SerializedName("san_pham")
-    val cartItems: List<OrderDetailRequest>
+    val cartItems: List<OrderDetailRequest>,
+
+    @SerializedName("voucher_id")
+    val voucherId: Int?,
+
+    @SerializedName("discount_amount") val discountAmount: Double,
+
 )
 
 data class OrderDetailRequest(

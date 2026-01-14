@@ -14,16 +14,16 @@ import com.example.techz.model.UpdateProfileRequest
 import com.example.techz.model.*
 import retrofit2.Call
 import retrofit2.http.GET
-import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.Body
 import retrofit2.http.DELETE
-import retrofit2.http.HTTP
 import retrofit2.http.POST
 import retrofit2.http.Path
 import retrofit2.http.Query
 
 interface ApiService {
+
+    @GET("api/vouchers")
+    fun getAvailableVouchers(): Call<List<Voucher>>
 
     @GET("api/user/{id}/orders")
     fun getUserOrders(@Path("id") userId: Int): Call<List<Order>>
@@ -75,8 +75,8 @@ interface ApiService {
     //tìm kiếm + debounce
     @GET("/api/search")
     fun searchByName(@Query("q") query: String): Call<List<Product>>
-
-
+    @POST("api/admin/voucher/add")
+    fun addVoucher(@Body request: VoucherRequest): Call<AuthResponse>
 
 }
 
@@ -84,18 +84,3 @@ interface ApiService {
 
 
 
-
-object RetrofitClient {
-
-    private const val BASE_URL = "http://103.228.36.78:3000/"
-    //private const val BASE_URL = "http://160.250.247.5:3000/"
-    //private const val BASE_URL = "http://10.0.2.2:3000/"
-
-    val instance: ApiService by lazy {
-        val retrofit = Retrofit.Builder()
-            .baseUrl(BASE_URL)
-            .addConverterFactory(GsonConverterFactory.create())
-            .build()
-        retrofit.create(ApiService::class.java)
-    }
-}

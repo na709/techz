@@ -56,7 +56,6 @@ fun RegisterScreen(
             Toast.makeText(context, "Mật khẩu nhập lại không khớp!", Toast.LENGTH_SHORT).show()
             return
         }
-//
         isLoading = true
         val request = RegisterRequest(name, email, username, password)
 
@@ -66,8 +65,9 @@ fun RegisterScreen(
                 if (response.isSuccessful && response.body()?.success == true) {
                     val user = response.body()?.user
                     val role = response.body()?.role ?:"user"
+                    val token = response.body()?.token ?:""
                     user?.let {
-                        UserSession.login(context,it,role)
+                        UserSession.login(context,it,role,token)
                     }
                     Toast.makeText(context, "Đăng ký thành công!", Toast.LENGTH_LONG).show()
                     onRegister()
