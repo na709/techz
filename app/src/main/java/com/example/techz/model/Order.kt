@@ -7,7 +7,8 @@ data class OrderResponse(
     @SerializedName("tong_tien") val totalPrice: Int,
     @SerializedName("trang_thai") val status: String,
     @SerializedName("ten_san_pham") val productName: String?,
-    @SerializedName("so_luong_sp") val quantity: Int
+    @SerializedName("so_luong_sp") val quantity: Int,
+    @SerializedName("trang_thai_thanh_toan") val paymentStatus: String?
 )
 
 data class OrderActionRequest(

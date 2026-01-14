@@ -61,7 +61,6 @@ fun AdminOrderScreen(navController: NavHostController) {
     val tabs = listOf("Tất cả", "Chờ Xác Nhận", "Đang Vận Chuyển", "Đã Giao", "Đã Hủy")
     var selectedTabIndex by remember { mutableIntStateOf(0) }
 
-    // HÀM XỬ LÝ CHUNG: DUYỆT / HỦY / ĐÃ GIAO
     fun processOrderAction(orderId: Int, action: String) {
         if (currentAdminId == -1) {
             Toast.makeText(context, "Lỗi: Không tìm thấy ID Admin!", Toast.LENGTH_LONG).show()
@@ -69,8 +68,6 @@ fun AdminOrderScreen(navController: NavHostController) {
         }
 
         val request = OrderActionRequest(orderId = orderId)
-
-        // Lựa chọn API dựa trên hành động truyền vào
         val apiCall = when (action) {
             "CONFIRM" -> RetrofitClient.instance.confirmOrder(currentAdminId, request)
             "CANCEL" -> RetrofitClient.instance.cancelOrder(currentAdminId, request)
@@ -90,9 +87,14 @@ fun AdminOrderScreen(navController: NavHostController) {
 
                     Toast.makeText(context, "Cập nhật thành công!", Toast.LENGTH_SHORT).show()
 
-                    // Cập nhật danh sách tại chỗ để giao diện thay đổi ngay
+                    // Cập nhật danh sách tại chỗ (Cập nhật cả trạng thái đơn và trạng thái thanh toán)
                     orderList = orderList.map {
-                        if (it.id == orderId) it.copy(status = nextStatus) else it
+                        if (it.id == orderId) {
+                            it.copy(
+                                status = nextStatus,
+                                paymentStatus = if (action == "DELIVERED") "Đã thanh toán" else it.paymentStatus
+                            )
+                        } else it
                     }
                 } else {
                     Toast.makeText(context, "Thất bại: ${response.body()?.message}", Toast.LENGTH_SHORT).show()
@@ -198,11 +200,27 @@ fun OrderItem(order: OrderResponse, onAction: (String) -> Unit) {
             }
             Divider(modifier = Modifier.padding(vertical = 8.dp), color = Color(0xFFEEEEEE))
             Text(text = order.productName ?: "Đơn hàng #${order.id}", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+
+            // 1. Hiển thị Tổng tiền
             Text(text = "Tổng tiền: ${formatPrice(order.totalPrice)}", color = Color.Red, fontWeight = FontWeight.Bold)
-            Text(text = "Số lượng: ${order.quantity}", fontSize = 13.sp, color = Color.Gray)
+
+            // 2. Hiển thị Trạng thái thanh toán (Dưới tổng tiền, không thêm nút)
+            val isPaid = order.paymentStatus == "Đã thanh toán"
+            Column {
+                Text(
+                    text = "Thanh toán: ${order.paymentStatus ?: "Chưa thanh toán"}",
+                    color = if (isPaid) Color(0xFF4CAF50) else Color(0xFFF44336),
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(top = 2.dp)
+                )
+            }
+
+            Text(text = "Số lượng: ${order.quantity}", fontSize = 13.sp, color = Color.Gray, modifier = Modifier.padding(top = 2.dp))
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            // Giữ nguyên các nút chức năng cũ
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 when (order.status.lowercase()) {
                     "chờ xác nhận" -> {
