@@ -1,7 +1,6 @@
 package com.example.techz.ui.screens.product
 
 import android.content.Context
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -33,8 +32,11 @@ import kotlinx.coroutines.delay
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+import android.widget.Toast
+import com.example.techz.model.AuthResponse
+import com.example.techz.model.CartRequest
+import com.example.techz.service.UserSession
 
-// Enum này có thể để ở file chung hoặc giữ ở đây
 enum class SortOrder { NONE, PRICE_ASC, PRICE_DESC }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -84,7 +86,6 @@ fun ProductListScreen(
             }
         })
     }
-
     LaunchedEffect(Unit) {
         val sharedPref = context.getSharedPreferences("MY_APP_PREF", Context.MODE_PRIVATE)
         currentName = sharedPref.getString("USER_NAME", null)
@@ -184,7 +185,44 @@ fun ProductListScreen(
                             horizontalArrangement = Arrangement.spacedBy(12.dp),
                             modifier = Modifier.fillMaxSize()
                         ) {
-                            items(displayList) { product -> ProductItem(product, onProductClick) }
+                            items(displayList) { product ->
+                                ProductItem(
+                                    product = product,
+                                    onClick = { onProductClick(it) },
+                                    onAddToCart = { selectedProduct ->
+
+                                        // 1. Kiểm tra đăng nhập
+                                        val userId = UserSession.currentUserId
+
+                                        if (userId == null) {
+                                            Toast.makeText(context, "Vui lòng đăng nhập để mua hàng!", Toast.LENGTH_SHORT).show()
+
+                                            navController.navigate("login")
+                                        } else {
+                                            val request = CartRequest(
+                                                userId = userId,
+                                                productId = selectedProduct.id,
+                                                quantity = 1
+                                            )
+
+                                            // 2. Gọi API Thêm giỏ hàng
+                                            RetrofitClient.instance.addToCart(request).enqueue(object : Callback<AuthResponse> {
+                                                override fun onResponse(call: Call<AuthResponse>, response: Response<AuthResponse>) {
+                                                    if (response.isSuccessful) {
+                                                        Toast.makeText(context, "Đã thêm vào giỏ!", Toast.LENGTH_SHORT).show()
+                                                    } else {
+                                                        Toast.makeText(context, "Thất bại: ${response.message()}", Toast.LENGTH_SHORT).show()
+                                                    }
+                                                }
+
+                                                override fun onFailure(call: Call<AuthResponse>, t: Throwable) {
+                                                    Toast.makeText(context, "Lỗi mạng: ${t.message}", Toast.LENGTH_SHORT).show()
+                                                }
+                                            })
+                                        }
+                                    }
+                                )
+                            }
                         }
                     }
                 }

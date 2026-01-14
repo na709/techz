@@ -3,6 +3,8 @@ package com.example.techz.ui.components
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -21,7 +23,10 @@ import java.text.NumberFormat
 import java.util.Locale
 
 @Composable
-fun ProductItem(product: Product, onClick: (Int) -> Unit) {
+fun ProductItem(
+    product: Product,
+    onClick: (Int) -> Unit,
+    onAddToCart: (Product) -> Unit) {
     Card(
         modifier = Modifier
             .width(160.dp)
@@ -60,21 +65,42 @@ fun ProductItem(product: Product, onClick: (Int) -> Unit) {
                 val formattedPrice = NumberFormat.getCurrencyInstance(Locale("vi", "VN")).format(product.price)
                 Text(
                     text = formattedPrice,
-                    color = Color(0xFFD32F2F),
+                    color = Color(0xFFFF5722),
                     fontWeight = FontWeight.Bold,
                     fontSize = 15.sp
                 )
 
                 Spacer(Modifier.height(8.dp))
 
-                Button(
-                    onClick = { onClick(product.id) },
-                    modifier = Modifier.fillMaxWidth().height(36.dp),
-                    contentPadding = PaddingValues(0.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00A9FF)),
-                    shape = RoundedCornerShape(8.dp)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-                    Text("Xem chi tiết", fontSize = 12.sp)
+                    Button(
+                        onClick = { onClick(product.id) },
+                        modifier = Modifier.weight(1f).height(36.dp),
+                        contentPadding = PaddingValues(0.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00A9FF)),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Text("Xem chi tiết", fontSize = 11.sp)
+                    }
+
+                    Button(
+                        onClick = { onAddToCart(product) },
+                        modifier = Modifier.size(36.dp),
+                        contentPadding = PaddingValues(0.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00A9FF)),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Add,
+                            contentDescription = "Add to Cart",
+                            tint = Color.White,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
                 }
             }
         }
