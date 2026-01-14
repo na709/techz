@@ -162,12 +162,18 @@ object CartManager {
         RetrofitClient.instance.createOrder(orderRequest).enqueue(object : Callback<AuthResponse> {
             override fun onResponse(call: Call<AuthResponse>, response: Response<AuthResponse>) {
                 if (response.isSuccessful && response.body()?.success == true) {
-                    cartItems.clear()
-                    Toast.makeText(context, "Đặt hàng thành công!", Toast.LENGTH_SHORT).show()
-                    onSuccess()
+                    val orderIdFromServer = response.body()?.orderId
 
-                    // Xóa giỏ hàng trên Server
-                    clearServerCart(userId)
+                    if (paymentMethod == "Ví Momo" && orderIdFromServer != null) {
+                        // Nếu chọn Momo -> Gọi hàm xử lý Momo riêng
+                        initiateMomoPayment(context, orderIdFromServer, finalPrice.toLong(), onSuccess)
+                    } else {
+                        // Nếu là Tiền mặt (COD) -> Xử lý như cũ
+                        cartItems.clear()
+                        Toast.makeText(context, "Đặt hàng thành công!", Toast.LENGTH_SHORT).show()
+                        onSuccess()
+                        clearServerCart(userId)
+                    }
                 } else {
                     val errorMsg = response.body()?.message ?: "Lỗi đặt hàng"
                     Toast.makeText(context, errorMsg, Toast.LENGTH_LONG).show()
@@ -176,6 +182,38 @@ object CartManager {
 
             override fun onFailure(call: Call<AuthResponse>, t: Throwable) {
                 Toast.makeText(context, "Lỗi kết nối: ${t.message}", Toast.LENGTH_SHORT).show()
+            }
+        })
+    }
+
+    private fun initiateMomoPayment(context: Context, orderId: Int, amount: Long, onSuccess: () -> Unit) {
+        val request = com.example.techz.model.MomoPaymentRequest(
+            orderId = orderId.toString(),
+            amount = amount,
+            orderInfo = "Thanh toan don hang #$orderId TechZ"
+        )
+
+        RetrofitClient.instance.createMomoPayment(request).enqueue(object : Callback<com.example.techz.model.MomoResponse> {
+            override fun onResponse(call: Call<com.example.techz.model.MomoResponse>, response: Response<com.example.techz.model.MomoResponse>) {
+                if (response.body()?.success == true) {
+                    val payUrl = response.body()?.payUrl
+
+                    if (payUrl != null) {
+                        val intent = android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(payUrl))
+                        context.startActivity(intent)
+
+                        cartItems.clear()
+                        onSuccess()
+
+                        UserSession.currentUserId?.let { clearServerCart(it) }
+                    }
+                } else {
+                    Toast.makeText(context, "Lỗi tạo cổng thanh toán: ${response.body()?.message}", Toast.LENGTH_SHORT).show()
+                }
+            }
+
+            override fun onFailure(call: Call<com.example.techz.model.MomoResponse>, t: Throwable) {
+                Toast.makeText(context, "Lỗi kết nối Momo: ${t.message}", Toast.LENGTH_SHORT).show()
             }
         })
     }

@@ -18,6 +18,7 @@ import com.example.techz.service.UserSession
 import com.example.techz.ui.screens.account.AccountChangePasswordScreen
 import com.example.techz.ui.screens.account.AccountDetailScreen
 import com.example.techz.ui.screens.account.AccountLoggedScreen
+import com.example.techz.ui.screens.account.AccountOrderDetailScreen
 import com.example.techz.ui.screens.account.AccountOrderScreen
 import com.example.techz.ui.screens.account.AccountScreen
 import com.example.techz.ui.screens.admin.AddVoucherScreen
@@ -115,6 +116,14 @@ fun AppNavGraph(
                 }
             )
         }
+        composable(
+            route = Screen.OrderDetail.route+"/{orderId}",
+            arguments = listOf(navArgument("orderId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val orderIdString = backStackEntry.arguments?.getString("orderId")
+            val orderId = orderIdString?.toIntOrNull() ?: 0
+            AccountOrderDetailScreen(navController=navController, orderId = orderId)
+        }
 
 
 
@@ -125,8 +134,6 @@ fun AppNavGraph(
             val productIdStr = backStackEntry.arguments?.getString("id")
             val productId = productIdStr?.toIntOrNull()
 
-            // Logic lấy Product từ API hoặc List (giữ nguyên logic cũ của bạn để lấy product)
-            // Ở đây tôi ví dụ cách lấy tạm thời, bạn hãy ghép với logic lấy product hiện tại của bạn
 
             var product by remember { mutableStateOf<com.example.techz.model.Product?>(null) }
 

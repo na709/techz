@@ -2,6 +2,7 @@ package com.example.techz.ui.screens.account
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -19,12 +20,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.example.techz.model.Order // Import model Order thật
 import com.example.techz.service.RetrofitClient
 import com.example.techz.service.UserSession
 import com.example.techz.ui.components.TechZBottomBar
+import com.example.techz.ui.navigation.Screen
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -105,7 +108,7 @@ fun AccountOrderScreen(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 items(orderList) { order ->
-                    OrderItem(order)
+                    OrderItem(order, navController = navController)
                 }
             }
         }
@@ -113,15 +116,16 @@ fun AccountOrderScreen(
 }
 
 @Composable
-fun OrderItem(order: Order) {
+fun OrderItem(order: Order, navController: NavController) {
     val formatter = NumberFormat.getCurrencyInstance(Locale("vi", "VN"))
 
     // Xử lý màu trạng thái
     val statusColor = when (order.status) {
-        "Hoàn thành", "Đã giao" -> Color(0xFF4CAF50)
-        "Đã hủy" -> Color(0xFFF44336)
-        "Đang giao", "Đang vận chuyển" -> Color(0xFF2196F3)
-        else -> Color(0xFFFF9800) // Chờ xử lý
+        "Đã Thanh Toán" -> Color(0xFF4CAF50)
+        "Đã Hủy" -> Color(0xFFF44336)
+        //"Chờ Xác Nhận" -> Color(0xFFFF9800)
+        //"Đang giao", "Đang vận chuyển" -> Color(0xFF2196F3)
+        else -> Color(0xFFFF9800)
     }
 
     // Xử lý tên sản phẩm hiển thị
@@ -138,7 +142,6 @@ fun OrderItem(order: Order) {
         modifier = Modifier.fillMaxWidth()
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            // Header
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
@@ -151,10 +154,9 @@ fun OrderItem(order: Order) {
 
             HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp), thickness = 0.5.dp, color = Color.LightGray)
 
-            // Body
             Row(verticalAlignment = Alignment.CenterVertically) {
                 AsyncImage(
-                    model = order.firstProductImage, // Link ảnh từ API
+                    model = order.firstProductImage,
                     contentDescription = null,
                     modifier = Modifier
                         .size(60.dp)
@@ -177,20 +179,51 @@ fun OrderItem(order: Order) {
                 }
             }
 
-            HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp), thickness = 0.5.dp, color = Color.LightGray)
+            HorizontalDivider(
+                modifier = Modifier.padding(top = 12.dp, bottom = 16.dp),
+                thickness = 0.5.dp,
+                color = Color.LightGray
+            )
 
-            // Footer
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Bottom
             ) {
-                Text("Thành tiền: ", fontSize = 14.sp, color = Color.Gray)
-                Text(
-                    text = formatter.format(order.total),
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF00A9FF)
-                )
+                Button(
+                    onClick = {
+                        navController.navigate(Screen.OrderDetail.route+"/${order.id}")
+                    },
+                    modifier = Modifier
+                        .height(36.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF03A9F4)
+                    ),
+                    shape = RoundedCornerShape(8.dp),
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 0.dp)
+                ) {
+                    Text(
+                        text = "Xem chi tiết",
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 13.sp
+                        ),
+                        color = Color.White
+                    )
+                }
+                Column(
+                    horizontalAlignment = Alignment.End,
+                    modifier = Modifier.padding(bottom = 4.dp)
+                ) {
+                    Text(
+                        text = "Thành tiền: ${formatter.format(order.total)}",
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 15.sp
+                        ),
+                        color = Color(0xFF03A9F4)
+                    )
+                }
             }
         }
     }

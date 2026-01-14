@@ -39,3 +39,28 @@ data class OrderDetailRequest(
     @SerializedName("gia_ban")
     val price: Double
 )
+
+data class OrderDetailResponse(
+    @SerializedName("order") val order: OrderInfo,
+    @SerializedName("items") val items: List<OrderDetailItem>
+)
+
+data class OrderInfo(
+    @SerializedName("id_don_hang") val id_don_hang: Int,
+    @SerializedName("ngay_dat_hang") val ngay_dat_hang: String,
+    @SerializedName("tong_tien") val tong_tien: Double,
+    @SerializedName("trang_thai") val trang_thai: String,
+    @SerializedName("diachi_giao_hang") val diachi_giao_hang: String,
+    @SerializedName("ghi_chu") val ghi_chu: String
+)
+
+data class OrderDetailItem(
+    @SerializedName("id_san_pham") val id_san_pham: Int,
+    @SerializedName("ten_san_pham") val ten_san_pham: String,
+    @SerializedName("hinh_anh") val hinh_anh: String?,
+    @SerializedName("so_luong") val so_luong: Int,
+    @SerializedName("gia_ban") val gia_ban: Double,
+    @SerializedName("thanh_tien") val thanh_tien: Double
+)
+
+
