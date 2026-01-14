@@ -87,8 +87,3 @@ interface ApiService {
     fun addVoucher(@Body request: VoucherRequest): Call<AuthResponse>
 
 }
-
-
-
-
-
