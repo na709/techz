@@ -23,6 +23,8 @@ import retrofit2.http.Query
 
 interface ApiService {
 
+    @GET("api/payment-methods")
+    fun getPaymentMethods(): Call<List<PaymentMethod>>
     @GET("api/order/detail/{orderId}")
     suspend fun getOrderDetail(@Path("orderId") orderId: Int): OrderDetailResponse
 
