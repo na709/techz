@@ -1,6 +1,5 @@
 package com.example.techz.ui.screens.admin
 
-import android.content.Context
 import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -10,6 +9,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -25,6 +25,7 @@ import com.example.techz.model.AuthResponse
 import com.example.techz.model.OrderActionRequest
 import com.example.techz.model.OrderResponse
 import com.example.techz.service.RetrofitClient
+import com.example.techz.service.UserSession // Import UserSession
 import com.example.techz.ui.components.TechZBottomBarFull
 import com.example.techz.ui.navigation.Screen
 import retrofit2.Call
@@ -53,8 +54,10 @@ fun formatPrice(price: Int): String {
 @Composable
 fun AdminOrderScreen(navController: NavHostController) {
     val context = LocalContext.current
-    val sharedPreferences = remember { context.getSharedPreferences("AppPrefs", Context.MODE_PRIVATE) }
-    val currentAdminId = remember { sharedPreferences.getInt("saved_user_id", -1) }
+
+    // --- THAY ĐỔI 1: LẤY ID TỪ USERSESSION ---
+    // Không dùng SharedPreferences "AppPrefs" nữa
+    val currentAdminId = UserSession.currentUserId ?: -1
 
     var orderList by remember { mutableStateOf<List<OrderResponse>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
@@ -63,7 +66,7 @@ fun AdminOrderScreen(navController: NavHostController) {
 
     fun processOrderAction(orderId: Int, action: String) {
         if (currentAdminId == -1) {
-            Toast.makeText(context, "Lỗi: Không tìm thấy ID Admin!", Toast.LENGTH_LONG).show()
+            Toast.makeText(context, "Lỗi: Phiên đăng nhập hết hạn!", Toast.LENGTH_LONG).show()
             return
         }
 
@@ -87,7 +90,7 @@ fun AdminOrderScreen(navController: NavHostController) {
 
                     Toast.makeText(context, "Cập nhật thành công!", Toast.LENGTH_SHORT).show()
 
-                    // Cập nhật danh sách tại chỗ (Cập nhật cả trạng thái đơn và trạng thái thanh toán)
+                    // Cập nhật danh sách tại chỗ (Optimistic Update)
                     orderList = orderList.map {
                         if (it.id == orderId) {
                             it.copy(
@@ -107,11 +110,20 @@ fun AdminOrderScreen(navController: NavHostController) {
     }
 
     LaunchedEffect(Unit) {
-        if (currentAdminId == -1) {
+        // Đảm bảo Session được load nếu lỡ user reload app ở màn hình này
+        UserSession.initSession(context)
+
+        // Lấy lại ID sau khi init (đề phòng trường hợp biến RAM bị null)
+        val idToCheck = UserSession.currentUserId ?: -1
+
+        if (idToCheck == -1) {
             isLoading = false
+            Toast.makeText(context, "Vui lòng đăng nhập lại", Toast.LENGTH_SHORT).show()
+            navController.navigate(Screen.Login.route)
             return@LaunchedEffect
         }
-        RetrofitClient.instance.getAllOrders(currentAdminId).enqueue(object : Callback<List<OrderResponse>> {
+
+        RetrofitClient.instance.getAllOrders(idToCheck).enqueue(object : Callback<List<OrderResponse>> {
             override fun onResponse(call: Call<List<OrderResponse>>, response: Response<List<OrderResponse>>) {
                 isLoading = false
                 if (response.isSuccessful && response.body() != null) {
@@ -138,14 +150,12 @@ fun AdminOrderScreen(navController: NavHostController) {
         topBar = {
             TopAppBar(
                 title = { Text("Quản Lý Đơn Hàng", fontWeight = FontWeight.Bold, color = Color.White) },
-                actions = {
-                    IconButton(onClick = {
-                        sharedPreferences.edit().clear().apply()
-                        navController.navigate(Screen.Login.route) { popUpTo(0) { inclusive = true } }
-                    }) {
-                        Icon(Icons.Filled.ExitToApp, contentDescription = null, tint = Color.White)
+                navigationIcon = {
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Color.White)
                     }
                 },
+
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color(0xFF03A9F4))
             )
         },
@@ -204,7 +214,7 @@ fun OrderItem(order: OrderResponse, onAction: (String) -> Unit) {
             // 1. Hiển thị Tổng tiền
             Text(text = "Tổng tiền: ${formatPrice(order.totalPrice)}", color = Color.Red, fontWeight = FontWeight.Bold)
 
-            // 2. Hiển thị Trạng thái thanh toán (Dưới tổng tiền, không thêm nút)
+            // 2. Hiển thị Trạng thái thanh toán
             val isPaid = order.paymentStatus == "Đã thanh toán"
             Column {
                 Text(

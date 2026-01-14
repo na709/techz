@@ -1,6 +1,5 @@
 package com.example.techz.ui.screens.login
 
-import android.content.Context
 import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
@@ -23,9 +22,6 @@ import retrofit2.Response
 import com.example.techz.model.LoginRequest
 import com.example.techz.service.RetrofitClient
 import com.example.techz.service.UserSession
-import com.example.techz.model.User
-import androidx.core.content.edit
-import com.example.techz.service.UserSession.token
 
 @Composable
 fun LoginScreen(
@@ -38,9 +34,8 @@ fun LoginScreen(
     var password by remember { mutableStateOf("") }
     var isLoading by remember { mutableStateOf(false) }
 
-    val logoUrl = "http://160.250.247.5/images/logo.jpg"
+    val logoUrl = "https://s3.cloudfly.vn/techz-product-images/images/logo.jpg"
     val brandColor = Color(0xFF00A9FF)
-
 
     fun handleLogin() {
         if (username.isBlank() || password.isBlank()) {
@@ -59,22 +54,19 @@ fun LoginScreen(
                     val authData = response.body()
                     val user = authData?.user
                     val role = authData?.role ?: "user"
+                    val authToken = authData?.token
 
-                    // --- ĐOẠN QUAN TRỌNG NHẤT: LƯU ID VÀO BỘ NHỚ ---
-                    val sharedPreferences = context.getSharedPreferences("AppPrefs", Context.MODE_PRIVATE)
-                    sharedPreferences.edit {
-                        putInt("saved_user_id", user?.id ?: -1) // Thêm dấu ? và ?: -1 để hết lỗi đỏ
+                    if (user != null) {
+                        UserSession.login(context, user, role, authToken)
+
+                        Toast.makeText(context, "Xin chào ${user.name}!", Toast.LENGTH_SHORT).show()
+                        onLoginSuccess(role)
+                    } else {
+                        Toast.makeText(context, "Lỗi: Không tìm thấy thông tin người dùng", Toast.LENGTH_SHORT).show()
                     }
-                    // ----------------------------------------------
-
-                    user?.let {
-                        UserSession.login(context, it, role,token)
-                    }
-
-                    Toast.makeText(context, "Xin chào ${user?.name}!", Toast.LENGTH_SHORT).show()
-                    onLoginSuccess(role)
                 } else {
-                    Toast.makeText(context, "Sai tài khoản hoặc mật khẩu!", Toast.LENGTH_SHORT).show()
+                    val msg = response.body()?.message ?: "Sai tài khoản hoặc mật khẩu!"
+                    Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
                 }
             }
 

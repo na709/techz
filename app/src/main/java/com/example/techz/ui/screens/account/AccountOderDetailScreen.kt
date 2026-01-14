@@ -104,6 +104,7 @@ fun AccountOrderDetailScreen(
                                 "Chờ Xác Nhận" -> Color(0xFFFF9800)
                                 "Đã Hủy" -> Color(0xFFFF4433)
                                 "Đang giao", "Đang Vận Chuyển" -> Color(0xFF2196F3)
+
                                 else -> Color.Gray
                             }
                             Text(
