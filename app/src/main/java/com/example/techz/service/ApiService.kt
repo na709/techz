@@ -16,6 +16,7 @@ import retrofit2.Call
 import retrofit2.http.GET
 import retrofit2.http.Body
 import retrofit2.http.DELETE
+import retrofit2.http.Header
 import retrofit2.http.POST
 import retrofit2.http.Path
 import retrofit2.http.Query
@@ -83,6 +84,30 @@ interface ApiService {
     fun searchByName(@Query("q") query: String): Call<List<Product>>
     @POST("api/admin/voucher/add")
     fun addVoucher(@Body request: VoucherRequest): Call<AuthResponse>
+    // Lấy Danh Sách Đơn Hàng
+    @GET("api/order/getAll")
+    fun getAllOrders(
+        @Header("admin-id") adminId: Int // Thêm Header này vào
+    ): Call<List<OrderResponse>>
+    //update trạng thái
+    // 1. Duyệt đơn
+    @POST("api/order/confirm")
+    fun confirmOrder(
+        @Header("admin-id") adminId: Int,
+        @Body request: OrderActionRequest
+    ): Call<AuthResponse>
+    // 2. Hủy đơn (Kèm header admin-id)    // 2. Hủy đơn
+    @POST("api/order/cancel")
+    fun cancelOrder(
+        @Header("admin-id") adminId: Int,
+        @Body request: OrderActionRequest
+    ): Call<AuthResponse>
+    // 3. Đã giao
+    @POST("api/order/delivered")
+    fun deliveredOrder(
+        @Header("admin-id") adminId: Int,
+        @Body request: OrderActionRequest
+    ): Call<AuthResponse>
 
 }
 
