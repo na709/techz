@@ -11,10 +11,7 @@ import com.example.techz.model.OrderRequest
 import com.example.techz.model.Product
 import com.example.techz.model.RegisterRequest
 import com.example.techz.model.UpdateProfileRequest
-
-//
 import com.example.techz.model.*
-
 import retrofit2.Call
 import retrofit2.http.GET
 import retrofit2.Retrofit
