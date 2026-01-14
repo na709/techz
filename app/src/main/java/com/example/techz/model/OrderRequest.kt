@@ -12,9 +12,6 @@ data class OrderRequest(
     @SerializedName("so_dien_thoai")
     val phone: String,
 
-    @SerializedName("phuong_thuc_thanh_toan")
-    val paymentMethod: String,
-
     @SerializedName("tong_tien")
     val totalPrice: Double,
 
@@ -25,6 +22,7 @@ data class OrderRequest(
     val voucherId: Int?,
 
     @SerializedName("discount_amount") val discountAmount: Double,
+    @SerializedName("id_phuong_thuc") val id_phuong_thuc: Int
 
 )
 
@@ -51,7 +49,10 @@ data class OrderInfo(
     @SerializedName("tong_tien") val tong_tien: Double,
     @SerializedName("trang_thai") val trang_thai: String,
     @SerializedName("diachi_giao_hang") val diachi_giao_hang: String,
-    @SerializedName("ghi_chu") val ghi_chu: String
+
+    @SerializedName("ghi_chu") val ghi_chu: String,
+    val trang_thai_thanh_toan: String? = null,
+
 )
 
 data class OrderDetailItem(

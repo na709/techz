@@ -100,9 +100,16 @@ fun AccountOrderDetailScreen(
                     ) {
                         Column(modifier = Modifier.padding(16.dp)) {
                             val statusColor = when (detail.order.trang_thai) {
+
                                 "Đã Thanh Toán" -> Color(0xFF4CAF50)
                                 "Chờ Xác Nhận" -> Color(0xFFFF9800)
                                 "Đã hủy" -> Color(0xFFFF4433)
+
+                                "Đã Thanh Toán","Đã Giao" -> Color(0xFF4CAF50)
+                                "Chờ Xác Nhận" -> Color(0xFFFF9800)
+                                "Đã Hủy" -> Color(0xFFFF4433)
+                                "Đang Giao", "Đang Vận Chuyển" -> Color(0xFF2196F3)
+
                                 else -> Color.Gray
                             }
                             Text(

@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.example.techz.model.CartItem
+import com.example.techz.model.PaymentMethod
 import com.example.techz.model.Voucher
 import com.example.techz.service.CartManager
 import com.example.techz.service.RetrofitClient
@@ -59,7 +60,8 @@ fun CartScreen(
     var showVoucherDialog by remember { mutableStateOf(false) }
 
     // --- STATE THANH TOÁN ---
-    var selectedMethod by remember { mutableStateOf("Tiền mặt") }
+    var paymentMethods by remember { mutableStateOf<List<PaymentMethod>>(emptyList()) }
+    var selectedMethodObj by remember { mutableStateOf<PaymentMethod?>(null) }
 
     val finalPrice = (rawTotalPrice - discountAmount).coerceAtLeast(0.0)
 
@@ -70,6 +72,17 @@ fun CartScreen(
 
         // Nếu đã đăng nhập -> Gọi API lấy Voucher khả dụng
         if (UserSession.isLoggedIn) {
+            RetrofitClient.instance.getPaymentMethods().enqueue(object : Callback<List<PaymentMethod>> {
+                override fun onResponse(call: Call<List<PaymentMethod>>, response: Response<List<PaymentMethod>>) {
+                    if (response.isSuccessful) {
+                        val methods = response.body() ?: emptyList()
+                        paymentMethods = methods
+                        // Mặc định chọn cái đầu tiên (thường là COD)
+                        if (methods.isNotEmpty()) selectedMethodObj = methods[0]
+                    }
+                }
+                override fun onFailure(call: Call<List<PaymentMethod>>, t: Throwable) {}
+            })
             RetrofitClient.instance.getAvailableVouchers().enqueue(object : Callback<List<Voucher>> {
                 override fun onResponse(call: Call<List<Voucher>>, response: Response<List<Voucher>>) {
                     if (response.isSuccessful) {
@@ -135,41 +148,26 @@ fun CartScreen(
 
                         // B. PHƯƠNG THỨC THANH TOÁN
                         PaymentMethodSelector(
-                            currentMethod = selectedMethod,
-                            onMethodChanged = { newMethod -> selectedMethod = newMethod }
+                            currentMethod = selectedMethodObj?.ten_phuong_thuc ?: "Đang tải...",
+                            methods = paymentMethods,
+                            onMethodChanged = { newMethod -> selectedMethodObj = newMethod }
                         )
 
                         HorizontalDivider(thickness = 0.5.dp, color = Color.LightGray)
 
                         // C. THANH TOÁN & ĐẶT HÀNG
                         MinimalPaymentBottomBar(
-                            totalPrice = finalPrice,       // Giá đã giảm
-                            originalPrice = rawTotalPrice, // Giá gốc (để hiện gạch ngang)
+                            totalPrice = finalPrice,
+                            originalPrice = rawTotalPrice,
                             onCheckoutClick = {
-                                UserSession.initSession(context)
-                                if (!UserSession.isLoggedIn) {
-                                    Toast.makeText(context, "Vui lòng đăng nhập!", Toast.LENGTH_SHORT).show()
-                                    onRequireLogin()
-                                } else {
-                                    val currentAddress = UserSession.currentUserAddress
-                                    val currentPhone = UserSession.currentUserPhone
-
-                                    if (currentAddress.isNullOrBlank() || currentPhone.isNullOrBlank()) {
-                                        Toast.makeText(context, "Vui lòng cập nhật thông tin giao hàng!", Toast.LENGTH_LONG).show()
-                                        onMissingInfo()
-                                    } else {
-                                        // GỌI HÀM ĐẶT HÀNG TRONG CART MANAGER
-                                        CartManager.placeOrder(
-                                            context = context,
-                                            paymentMethod = selectedMethod,
-                                            voucherId = selectedVoucher?.id, // Gửi ID voucher
-                                            discount = discountAmount        // Gửi số tiền giảm
-                                        ) {
-                                            // Callback khi thành công
-                                            Toast.makeText(context, "Đặt hàng thành công!", Toast.LENGTH_LONG).show()
-                                            onCheckout()
-                                        }
-                                    }
+                                CartManager.placeOrder(
+                                    context = context,
+                                    id_phuong_thuc = selectedMethodObj?.id_phuong_thuc ?: 1,
+                                    voucherId = selectedVoucher?.id,
+                                    discount = discountAmount
+                                ) {
+                                    Toast.makeText(context, "Đặt hàng thành công!", Toast.LENGTH_LONG).show()
+                                    onCheckout()
                                 }
                             }
                         )
@@ -328,9 +326,11 @@ fun VoucherSelector(
 }
 
 @Composable
-fun PaymentMethodSelector(currentMethod: String, onMethodChanged: (String) -> Unit) {
+fun PaymentMethodSelector(
+    currentMethod: String,
+    methods: List<PaymentMethod>,
+    onMethodChanged: (PaymentMethod) -> Unit) {
     var expanded by remember { mutableStateOf(false) }
-    val methods = listOf("Tiền mặt", "Chuyển khoản Ngân hàng", "Ví Momo", "ZaloPay")
 
     Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
         Text("Phương thức thanh toán", fontWeight = FontWeight.Bold, fontSize = 14.sp, modifier = Modifier.padding(bottom = 8.dp))
@@ -356,7 +356,7 @@ fun PaymentMethodSelector(currentMethod: String, onMethodChanged: (String) -> Un
             ) {
                 methods.forEach { method ->
                     DropdownMenuItem(
-                        text = { Text(method) },
+                        text = { Text(method.ten_phuong_thuc) },
                         onClick = { onMethodChanged(method); expanded = false }
                     )
                 }
