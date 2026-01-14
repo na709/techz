@@ -191,7 +191,6 @@ fun ProductListScreen(
                                     onClick = { onProductClick(it) },
                                     onAddToCart = { selectedProduct ->
 
-                                        // 1. Kiểm tra đăng nhập
                                         val userId = UserSession.currentUserId
 
                                         if (userId == null) {
@@ -205,7 +204,6 @@ fun ProductListScreen(
                                                 quantity = 1
                                             )
 
-                                            // 2. Gọi API Thêm giỏ hàng
                                             RetrofitClient.instance.addToCart(request).enqueue(object : Callback<AuthResponse> {
                                                 override fun onResponse(call: Call<AuthResponse>, response: Response<AuthResponse>) {
                                                     if (response.isSuccessful) {
