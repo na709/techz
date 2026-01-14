@@ -1,5 +1,4 @@
 package com.example.techz.ui.navigation
-//
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.CircularProgressIndicator
@@ -19,8 +18,10 @@ import com.example.techz.service.UserSession
 import com.example.techz.ui.screens.account.AccountChangePasswordScreen
 import com.example.techz.ui.screens.account.AccountDetailScreen
 import com.example.techz.ui.screens.account.AccountLoggedScreen
+import com.example.techz.ui.screens.account.AccountOrderDetailScreen
 import com.example.techz.ui.screens.account.AccountOrderScreen
 import com.example.techz.ui.screens.account.AccountScreen
+import com.example.techz.ui.screens.admin.AddVoucherScreen
 import com.example.techz.ui.screens.admin.AdminDashboardScreen
 import com.example.techz.ui.screens.admin.AdminOrderScreen
 import com.example.techz.ui.screens.cart.CartScreen
@@ -37,7 +38,7 @@ fun AppNavGraph(
 ) {
 
 
-    NavHost(navController = navController, startDestination = Screen.Home.route) {
+    NavHost(navController = navController, startDestination = startDestination) {
 
         composable(Screen.Login.route) {
             LoginScreen(
@@ -105,12 +106,23 @@ fun AppNavGraph(
             CartScreen(
                 onBack = { navController.popBackStack() },
                 onCheckout = {
-                    navController.navigate("home")
+
+                    navController.navigate(Screen.OrderHistory.route)
                 },
                 onRequireLogin = {
                     navController.navigate("login")
+                },
+                onMissingInfo = { navController.navigate("account_detail")
                 }
             )
+        }
+        composable(
+            route = Screen.OrderDetail.route+"/{orderId}",
+            arguments = listOf(navArgument("orderId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val orderIdString = backStackEntry.arguments?.getString("orderId")
+            val orderId = orderIdString?.toIntOrNull() ?: 0
+            AccountOrderDetailScreen(navController=navController, orderId = orderId)
         }
 
 
@@ -122,8 +134,6 @@ fun AppNavGraph(
             val productIdStr = backStackEntry.arguments?.getString("id")
             val productId = productIdStr?.toIntOrNull()
 
-            // Logic lấy Product từ API hoặc List (giữ nguyên logic cũ của bạn để lấy product)
-            // Ở đây tôi ví dụ cách lấy tạm thời, bạn hãy ghép với logic lấy product hiện tại của bạn
 
             var product by remember { mutableStateOf<com.example.techz.model.Product?>(null) }
 
@@ -226,9 +236,23 @@ fun AppNavGraph(
                     navController.navigate(Screen.Home.route) {
                         popUpTo(0) { inclusive = true }
                     }
+                },
+                onGoToAddVoucher = {
+                    navController.navigate(Screen.AdminVoucher.route) {
+                        popUpTo(0) { inclusive = true }
+                    }
                 }
             )
         }
+        composable(Screen.AdminVoucher.route) {
+            AddVoucherScreen(
+                navController = navController,
+                onBack ={
+                    navController.navigate(Screen.AdminDashboard.route) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                }
+                )}
         composable(Screen.AdminOrder.route) {
             AdminOrderScreen(navController = navController)
         }

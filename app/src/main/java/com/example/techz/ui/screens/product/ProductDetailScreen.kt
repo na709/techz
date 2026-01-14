@@ -1,5 +1,6 @@
 package com.example.techz.ui.screens.product
 //
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -25,13 +26,15 @@ import com.example.techz.service.RetrofitClient
 import com.example.techz.service.UserSession
 import com.example.techz.ui.components.ProductItem
 import com.example.techz.ui.navigation.Screen // Import Screen để lấy route Login
-import com.example.techz.ui.screens.cart.CartManager
+import com.example.techz.service.CartManager
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 import java.text.NumberFormat
 import java.util.Locale
 import com.example.techz.model.CartRequest
+import kotlin.math.abs
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProductDetailScreen(
@@ -43,20 +46,33 @@ fun ProductDetailScreen(
     val context = LocalContext.current
     var relatedProducts by remember { mutableStateOf<List<Product>>(emptyList()) }
     val scrollState = rememberScrollState()
-
-    // Load sản phẩm liên quan
     LaunchedEffect(product.category) {
-        // Lưu ý: server trả về category là String hay Int?
-        // Trong file Product.kt bạn để category: String?, nhưng API thường dùng ID.
-        // Tôi giữ nguyên logic cũ của bạn, chỉ thêm check null
-        RetrofitClient.instance.getListProducts().enqueue(object : Callback<List<Product>> {
-            override fun onResponse(call: Call<List<Product>>, response: Response<List<Product>>) {
+        RetrofitClient.instance.getProductDetail(product.id).enqueue(object : Callback<Product> {
+            override fun onResponse(call: Call<Product>, response: Response<Product>) {
                 if (response.isSuccessful) {
-                    // Lọc sản phẩm cùng loại (logic tạm thời)
-                    relatedProducts = response.body()?.filter { it.id != product.id }?.take(4) ?: emptyList()
+                    val currentProduct = response.body()
+                    if (currentProduct != null) {
+                        RetrofitClient.instance.getListProducts().enqueue(object : Callback<List<Product>> {
+                            override fun onResponse(call: Call<List<Product>>, res: Response<List<Product>>) {
+                                if (res.isSuccessful) {
+                                    val allProducts = res.body() ?: emptyList()
+
+                                    relatedProducts = allProducts.filter { item ->
+                                        item.id != currentProduct.id && item.category == currentProduct.category
+                                    }
+                                        .sortedBy { abs(it.price - currentProduct.price) }
+                                        .take(4)
+                                }
+                            }
+                            override fun onFailure(call: Call<List<Product>>, t: Throwable) {
+                            }
+                        })
+                    }
                 }
             }
-            override fun onFailure(call: Call<List<Product>>, t: Throwable) {}
+            override fun onFailure(call: Call<Product>, t: Throwable) {
+                Log.e("ProductDetail", "Error: ${t.message}")
+            }
         })
     }
 
@@ -70,11 +86,9 @@ fun ProductDetailScreen(
             ) {
                 Button(
                     onClick = {
-                        // 1. Kiểm tra đăng nhập
                         val userId = UserSession.currentUserId
                         if (userId == null) {
                             Toast.makeText(context, "Vui lòng đăng nhập để mua hàng!", Toast.LENGTH_SHORT).show()
-                            // Có thể navigate về trang Login tại đây nếu muốn
                             navController.navigate(Screen.Login.route)
                         } else {
                             val request = CartRequest(
@@ -83,12 +97,10 @@ fun ProductDetailScreen(
                                 quantity = 1
                             )
 
-                            // 3. Gọi API
                             RetrofitClient.instance.addToCart(request).enqueue(object : Callback<AuthResponse> {
                                 override fun onResponse(call: Call<AuthResponse>, response: Response<AuthResponse>) {
                                     if (response.isSuccessful) {
                                         Toast.makeText(context, "Đã thêm vào giỏ!", Toast.LENGTH_SHORT).show()
-                                        // Load lại giỏ hàng ngầm để cập nhật số lượng badge (nếu có)
                                         CartManager.loadCart(context)
                                     } else {
                                         Toast.makeText(context, "Thất bại: ${response.message()}", Toast.LENGTH_SHORT).show()
@@ -158,16 +170,69 @@ fun ProductDetailScreen(
                 )
             }
 
-            // Sản phẩm liên quan... (Giữ nguyên logic hiển thị của bạn)
+            Spacer(Modifier.height(8.dp))
+
             if (relatedProducts.isNotEmpty()) {
-                // ... (Code hiển thị related products như cũ)
                 Column(modifier = Modifier.padding(bottom = 16.dp)) {
-                    Text("Sản phẩm gợi ý", fontWeight = FontWeight.Bold, modifier = Modifier.padding(16.dp))
-                    relatedProducts.forEach { item ->
-                        Text(item.name, modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
+                    Text(
+                        text = "Sản phẩm liên quan",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(16.dp)
+                    )
+                    val rows = relatedProducts.chunked(2)
+                    rows.forEach { rowItems ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            for (item in rowItems) {
+                                Box(modifier = Modifier.weight(1f)) {
+                                    ProductItem(
+                                        product = item,
+                                        onClick = { onProductClick(item) },
+                                        onAddToCart = { selectedProduct ->
+
+                                            val userId = UserSession.currentUserId
+
+                                            if (userId == null) {
+                                                Toast.makeText(context, "Vui lòng đăng nhập để mua hàng!", Toast.LENGTH_SHORT).show()
+
+                                                navController.navigate("login")
+                                            } else {
+                                                val request = CartRequest(
+                                                    userId = userId,
+                                                    productId = selectedProduct.id,
+                                                    quantity = 1
+                                                )
+
+                                                RetrofitClient.instance.addToCart(request).enqueue(object : Callback<AuthResponse> {
+                                                    override fun onResponse(call: Call<AuthResponse>, response: Response<AuthResponse>) {
+                                                        if (response.isSuccessful) {
+                                                            Toast.makeText(context, "Đã thêm vào giỏ!", Toast.LENGTH_SHORT).show()
+                                                        } else {
+                                                            Toast.makeText(context, "Thất bại: ${response.message()}", Toast.LENGTH_SHORT).show()
+                                                        }
+                                                    }
+
+                                                    override fun onFailure(call: Call<AuthResponse>, t: Throwable) {
+                                                        Toast.makeText(context, "Lỗi mạng: ${t.message}", Toast.LENGTH_SHORT).show()
+                                                    }
+                                                })
+                                            }
+                                        }
+                                    )
+                                }
+                            }
+                            if (rowItems.size == 1) {
+                                Spacer(modifier = Modifier.weight(1f))
+                            }
+                        }
                     }
                 }
             }
+
+
         }
     }
 }

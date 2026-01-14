@@ -38,7 +38,8 @@ data class DashboardItem(
 @Composable
 fun AdminDashboardScreen(
     navController: NavHostController,
-    onLogout: () -> Unit
+    onLogout: () -> Unit,
+    onGoToAddVoucher:() -> Unit
 ) {
     // Danh sách 5 chức năng quản lý
     val dashboardItems = listOf(
@@ -46,7 +47,7 @@ fun AdminDashboardScreen(
         DashboardItem("Order", Icons.Outlined.ShoppingCart) { navController.navigate(Screen.AdminOrder.route) },
         DashboardItem("Comment", Icons.AutoMirrored.Outlined.Chat) { /* Navigate to Comment */ },
         DashboardItem("Account", Icons.Outlined.Person) { /* Navigate to Account */ },
-        DashboardItem("Voucher", Icons.Outlined.ConfirmationNumber) { /* Navigate to Voucher */ }
+        DashboardItem("Voucher", Icons.Outlined.ConfirmationNumber) { onGoToAddVoucher() }
     )
 
     Scaffold(
@@ -164,5 +165,5 @@ fun DashboardItemCard(
 @Composable
 fun AdminDashboardScreenPreview() {
     val navController = rememberNavController()
-    AdminDashboardScreen(navController = navController, onLogout = { })
+    AdminDashboardScreen(navController = navController, onLogout = { }, onGoToAddVoucher = {})
 }

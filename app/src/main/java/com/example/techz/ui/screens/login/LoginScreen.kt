@@ -52,8 +52,9 @@ fun LoginScreen(onLoginSuccess: (String) -> Unit,
                     val authData = response.body()
                     val user = authData?.user
                     val role = authData?.role ?:"user"
+                    val token = authData?.token
                     user?.let {
-                        UserSession.login(context, it,role)
+                        UserSession.login(context, it,role,token)
                     }
                     Toast.makeText(context, "Xin chào ${user?.name}!", Toast.LENGTH_SHORT).show()
                     onLoginSuccess(role)

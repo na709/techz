@@ -1,14 +1,6 @@
 package com.example.techz.model
-//
 import com.google.gson.annotations.SerializedName
 
-//
-/*data class RegisterRequest(
-    val name: String,
-    val email: String,
-    val username: String,
-    val password: String
-)*/
 //data để hứng dữ liệu gửi về từ server
 data class Order(
     @SerializedName("id_don_hang") val id: Int,
@@ -25,7 +17,8 @@ data class User(
     @SerializedName("name") val name: String?,
     @SerializedName("email") val email: String?,
     @SerializedName("phone") val phone: String?,
-    @SerializedName("address") val address: String?
+    @SerializedName("address") val address: String?,
+    @SerializedName("permission") val permission: String? = null
 )
 
 // 2. Model chung cho Response (Vì cả Login và Register đều trả về cấu trúc giống nhau)
@@ -33,7 +26,9 @@ data class AuthResponse(
     @SerializedName("success") val success: Boolean,
     @SerializedName("message") val message: String,
     @SerializedName("role") val role: String,
-    @SerializedName("user") val user: User? // Có thể null
+    @SerializedName("token") val token: String?,
+    @SerializedName("user") val user: User?, // Có thể null
+    @SerializedName("orderId") val orderId: Int?
 )
 
 // 3. Body gửi lên khi Login
@@ -58,7 +53,6 @@ data class ChangePasswordRequest(
     @SerializedName("newPassword") val newPassword: String
 )
 
-// 4. Body gửi lên khi Tạo tài khoản Quản lý (Register)
 data class CreateManagerRequest(
     @SerializedName("current_admin_id") val currentAdminId: Int,
     @SerializedName("username") val username: String,
@@ -66,6 +60,7 @@ data class CreateManagerRequest(
     @SerializedName("name") val name: String,
     @SerializedName("email") val email: String
 )
+
 //đẩy data lên để update thông tin
 data class UpdateProfileRequest(
     @SerializedName("id") val id: Int,
