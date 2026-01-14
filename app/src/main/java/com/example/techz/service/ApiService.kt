@@ -21,6 +21,7 @@ import retrofit2.http.DELETE
 import retrofit2.http.HTTP
 import retrofit2.http.POST
 import retrofit2.http.Path
+import retrofit2.http.Query
 
 interface ApiService {
 
@@ -63,6 +64,20 @@ interface ApiService {
     @POST("api/order/add")
     fun createOrder(@Body orderRequest: OrderRequest): Call<AuthResponse>
 
+    // lấy loại linh kiện
+    @GET("/api/categories")
+    fun getCategories(): Call<List<String>>
+
+    //lọc theo loại
+    @GET("/api/products/category/{type}")
+    fun filterByCategory(@Path("type") type: String): Call<List<Product>>
+
+    //tìm kiếm + debounce
+    @GET("/api/search")
+    fun searchByName(@Query("q") query: String): Call<List<Product>>
+
+
+
 }
 
 
@@ -71,7 +86,9 @@ interface ApiService {
 
 
 object RetrofitClient {
-    private const val BASE_URL = "http://160.250.247.5:3000/"
+
+    private const val BASE_URL = "http://103.228.36.78:3000/"
+    //private const val BASE_URL = "http://160.250.247.5:3000/"
     //private const val BASE_URL = "http://10.0.2.2:3000/"
 
     val instance: ApiService by lazy {

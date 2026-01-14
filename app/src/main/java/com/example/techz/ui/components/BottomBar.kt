@@ -60,7 +60,7 @@ fun TechZBottomBar(
             label = { Text("Sản phẩm") },
             selected = currentRoute?.startsWith(Screen.ProductList.route) == true,
             onClick = {
-                navController.navigate(Screen.ProductList.route) {
+                navController.navigate("product_list/All") {
                     popUpTo(Screen.Home.route)
                     launchSingleTop = true
                 }
