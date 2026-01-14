@@ -123,7 +123,6 @@ fun OrderItem(order: Order, navController: NavController) {
     val statusColor = when (order.status) {
 
         "Đã Thanh Toán","Đã Giao" -> Color(0xFF4CAF50)
-
         "Đã Hủy" -> Color(0xFFF44336)
         //"Chờ Xác Nhận" -> Color(0xFFFF9800)
         "Đang Giao", "Đang Vận Chuyển" -> Color(0xFF2196F3)

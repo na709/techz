@@ -21,7 +21,7 @@ data class User(
     @SerializedName("permission") val permission: String? = null
 )
 
-// Model chung cho Response (Vì cả Login và Register đều trả về cấu trúc giống nhau)
+// 2. Model chung cho Response (Vì cả Login và Register đều trả về cấu trúc giống nhau)
 data class AuthResponse(
     @SerializedName("success") val success: Boolean,
     @SerializedName("message") val message: String,
@@ -31,7 +31,7 @@ data class AuthResponse(
     @SerializedName("orderId") val orderId: Int?
 )
 
-// Body gửi lên khi Login
+// 3. Body gửi lên khi Login
 data class LoginRequest(
     @SerializedName("username") val username: String,
     @SerializedName("password") val password: String

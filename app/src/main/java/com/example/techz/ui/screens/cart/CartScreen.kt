@@ -68,6 +68,17 @@ fun CartScreen(
     // --- 1. HÀM LOAD VOUCHER RIÊNG BIỆT (Để gọi lại khi cần refresh) ---
     fun loadVouchers() {
         if (UserSession.isLoggedIn) {
+            RetrofitClient.instance.getPaymentMethods().enqueue(object : Callback<List<PaymentMethod>> {
+                override fun onResponse(call: Call<List<PaymentMethod>>, response: Response<List<PaymentMethod>>) {
+                    if (response.isSuccessful) {
+                        val methods = response.body() ?: emptyList()
+                        paymentMethods = methods
+                        // Mặc định chọn cái đầu tiên (thường là COD)
+                        if (methods.isNotEmpty()) selectedMethodObj = methods[0]
+                    }
+                }
+                override fun onFailure(call: Call<List<PaymentMethod>>, t: Throwable) {}
+            })
             RetrofitClient.instance.getAvailableVouchers().enqueue(object : Callback<List<Voucher>> {
                 override fun onResponse(call: Call<List<Voucher>>, response: Response<List<Voucher>>) {
                     if (response.isSuccessful) {
@@ -175,7 +186,7 @@ fun CartScreen(
                             onCheckoutClick = {
                                 CartManager.placeOrder(
                                     context = context,
-                                    id_phuong_thuc = selectedMethodObj?.id_phuong_thuc ?: 1, // Truyền ID Int
+                                    id_phuong_thuc = selectedMethodObj?.id_phuong_thuc ?: 1,
                                     voucherId = selectedVoucher?.id,
                                     discount = discountAmount
                                 ) {
