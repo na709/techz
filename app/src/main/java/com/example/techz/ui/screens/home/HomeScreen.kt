@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import android.content.Context
+import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -22,8 +23,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import com.example.techz.model.AuthResponse
+import com.example.techz.model.CartRequest
 import com.example.techz.model.Product
 import com.example.techz.service.RetrofitClient
+import com.example.techz.service.UserSession
 import com.example.techz.ui.components.BannerScroll
 import com.example.techz.ui.components.ProductItem
 import com.example.techz.ui.components.TechZBottomBar
@@ -161,7 +165,37 @@ fun HomeScreen(
                         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
                     ) {
                         items(productList.take(10)) { product ->
-                            ProductItem(product, onProductClick)
+                            ProductItem(
+                                product = product,
+                                onClick = { onProductClick(it) },
+                                onAddToCart = { selectedProduct ->
+
+                                    val userId = UserSession.currentUserId
+                                    if (userId == null) {
+                                        Toast.makeText(context, "Vui lòng đăng nhập!", Toast.LENGTH_SHORT).show()
+                                        navController.navigate("login")
+                                    } else {
+                                        val request = CartRequest(
+                                            userId = userId,
+                                            productId = selectedProduct.id,
+                                            quantity = 1
+                                        )
+                                        // Gọi API
+                                        RetrofitClient.instance.addToCart(request).enqueue(object : Callback<AuthResponse> {
+                                            override fun onResponse(call: Call<AuthResponse>, response: Response<AuthResponse>) {
+                                                if (response.isSuccessful) {
+                                                    Toast.makeText(context, "Đã thêm vào giỏ!", Toast.LENGTH_SHORT).show()
+                                                } else {
+                                                    Toast.makeText(context, "Lỗi: ${response.message()}", Toast.LENGTH_SHORT).show()
+                                                }
+                                            }
+                                            override fun onFailure(call: Call<AuthResponse>, t: Throwable) {
+                                                Toast.makeText(context, "Lỗi mạng", Toast.LENGTH_SHORT).show()
+                                            }
+                                        })
+                                    }
+                                }
+                            )
                         }
                     }
                     Spacer(modifier = Modifier.height(16.dp))

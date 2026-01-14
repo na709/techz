@@ -1,3 +1,4 @@
+/*
 package com.example.techz.ui.screens.home
 //
 import android.util.Log
@@ -126,4 +127,4 @@ fun AdminHomeScreen(
             }
         }
     }
-}
+}*/
