@@ -95,9 +95,10 @@ object CartManager {
         })
     }
 
+    // --- HÀM ĐÃ SỬA LỖI ---
     fun placeOrder(
         context: Context,
-        paymentMethod: String,
+        id_phuong_thuc: Int, // <-- Dùng ID thay vì String
         voucherId: Int?,
         discount: Double,
         onSuccess: () -> Unit
@@ -133,11 +134,12 @@ object CartManager {
             )
         }
 
+        // 1. Sửa lỗi tạo Request: Truyền ID thay vì String
         val orderRequest = OrderRequest(
             userId = userId,
             address = address,
             phone = phone,
-            paymentMethod = paymentMethod,
+            id_phuong_thuc = id_phuong_thuc, // <-- Sửa tại đây (bạn cần đảm bảo Model OrderRequest cũng có field này)
             totalPrice = finalPrice,
             cartItems = listSanPhamGuiLenServer,
             voucherId = voucherId,
@@ -150,7 +152,9 @@ object CartManager {
                 if (response.isSuccessful && response.body()?.success == true) {
                     val orderIdFromServer = response.body()?.orderId
 
-                    if (paymentMethod == "Ví Momo" && orderIdFromServer != null) {
+                    // 2. Sửa lỗi kiểm tra điều kiện: So sánh ID thay vì chuỗi
+                    // Giả sử ID = 2 là Ví Momo
+                    if (id_phuong_thuc == 2 && orderIdFromServer != null) {
                         // call momo
                         initiateMomoPayment(context, orderIdFromServer, finalPrice.toLong(), onSuccess)
                     } else {
