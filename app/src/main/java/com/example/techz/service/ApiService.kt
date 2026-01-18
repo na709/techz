@@ -5,7 +5,6 @@ import com.example.techz.model.AuthResponse
 import com.example.techz.model.CartItem
 import com.example.techz.model.CartRequest
 import com.example.techz.model.ChangePasswordRequest
-import com.example.techz.model.CreateManagerRequest
 import com.example.techz.model.LoginRequest
 import com.example.techz.model.OrderRequest
 import com.example.techz.model.Product
@@ -22,6 +21,12 @@ import retrofit2.http.Path
 import retrofit2.http.Query
 
 interface ApiService {
+
+    @POST("api/logout")
+    fun logout(@Body body: Map<String, String>): Call<Void>
+
+    @POST("api/refresh-token")
+    fun refreshToken(@Body body: Map<String, String>): Call<Map<String, String>>
 
 
     @GET("api/payment-methods")
@@ -88,25 +93,23 @@ interface ApiService {
     fun searchByName(@Query("q") query: String): Call<List<Product>>
     @POST("api/admin/voucher/add")
     fun addVoucher(@Body request: VoucherRequest): Call<AuthResponse>
-    // Lấy Danh Sách Đơn Hàng
     @GET("api/order/getAll")
     fun getAllOrders(
-        @Header("admin-id") adminId: Int // Thêm Header này vào
+        @Header("admin-id") adminId: Int
     ): Call<List<OrderResponse>>
-    //update trạng thái
-    // 1. Duyệt đơn
+
     @POST("api/order/confirm")
     fun confirmOrder(
         @Header("admin-id") adminId: Int,
         @Body request: OrderActionRequest
     ): Call<AuthResponse>
-    // 2. Hủy đơn (Kèm header admin-id)    // 2. Hủy đơn
+
     @POST("api/order/cancel")
     fun cancelOrder(
         @Header("admin-id") adminId: Int,
         @Body request: OrderActionRequest
     ): Call<AuthResponse>
-    // 3. Đã giao
+
     @POST("api/order/delivered")
     fun deliveredOrder(
         @Header("admin-id") adminId: Int,

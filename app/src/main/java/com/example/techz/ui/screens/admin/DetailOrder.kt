@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
+import com.example.techz.ui.components.TechZBottomBarFull
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -53,7 +54,7 @@ fun OrderDetailScreen(navController: NavHostController) {
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color(0xFF03A9F4))
             )
         },
-        bottomBar = { AdminBottomBarUI() }
+        bottomBar = { TechZBottomBarFull(navController) }
     ) { padding ->
 
         // Phần nội dung chính

@@ -1,7 +1,7 @@
 package com.example.techz.ui.navigation
 //
 sealed class Screen(val route: String) {
-
+    object AdminProductList : Screen("admin_product_list")
     object OrderDetail : Screen("order_detail")
     object AdminVoucher : Screen("add_voucher")
     object OrderHistory : Screen("order_history")

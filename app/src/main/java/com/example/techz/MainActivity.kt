@@ -8,12 +8,15 @@ import com.example.techz.service.UserSession
 import com.example.techz.ui.navigation.AppNavGraph
 import com.example.techz.ui.navigation.Screen
 import com.example.techz.service.CartManager
+import com.example.techz.service.RetrofitClient
+
 //
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        UserSession.initSession(this)
+        UserSession.initSession(applicationContext)
+        RetrofitClient.init(applicationContext)
         CartManager.loadCart(this)
         android.util.Log.d("DEBUG_SESSION", "Role: ${UserSession.currentUserRole}, IsAdmin: ${UserSession.isAdmin}")
         setContent {

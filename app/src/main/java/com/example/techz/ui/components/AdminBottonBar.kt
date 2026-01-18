@@ -78,9 +78,8 @@ fun TechZBottomBarFull(navController: NavHostController) {
         NavigationBarItem(
             icon = { Icon(Icons.Filled.Settings, contentDescription = "Dashboard") },
             label = { Text("Dashboard", fontSize = 10.sp, fontWeight = FontWeight.Bold) },
-            selected = true, // Vì đang ở Dashboard nên để true
+            selected = true,
             onClick = {
-                // Đang ở đây rồi thì không làm gì hoặc load lại
             },
             colors = NavigationBarItemDefaults.colors(
                 selectedIconColor = Color(0xFF03A9F4),

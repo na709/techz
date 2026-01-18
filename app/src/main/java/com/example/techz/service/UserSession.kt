@@ -5,10 +5,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.example.techz.model.User
 import android.util.Base64
+import android.util.Log
+import android.widget.Toast
 import org.json.JSONObject
 
 object UserSession {
     var token by mutableStateOf<String?>(null)
+        private set
+    var refreshToken by mutableStateOf<String?>(null)
         private set
     var currentUserName by mutableStateOf<String?>(null)
         private set
@@ -29,14 +33,15 @@ object UserSession {
     val isLoggedIn: Boolean
         get() = currentUserId != null && token != null
 
-    fun login(context: Context, user: User, role: String,authToken: String?) {
+    fun login(context: Context, user: User, role: String, accessToken: String?, newRefreshToken: String?) {
         currentUserId = user.id
         currentUserName = user.name
         currentUserRole = role
         currentUserAddress = user.address
         currentUserPhone = user.phone
         currentUserEmail = user.email
-        token = authToken
+        token = accessToken
+        refreshToken = newRefreshToken
 
         val sharedPref = context.getSharedPreferences("TechZ_Prefs", Context.MODE_PRIVATE)
         with(sharedPref.edit()) {
@@ -46,23 +51,64 @@ object UserSession {
             putString("USER_ROLE", role)
             putString("USER_PHONE", user.phone ?: "")
             putString("USER_ADDRESS", user.address ?: "")
-            putString("ACCESS_TOKEN", authToken)
+            putString("ACCESS_TOKEN", accessToken)
+            putString("REFRESH_TOKEN", newRefreshToken)
+            apply()
+        }
+    }
+
+    fun saveNewTokens(context: Context, newAccessToken: String, newRefreshToken: String?) {
+        token = newAccessToken
+        if (newRefreshToken != null) {
+            refreshToken = newRefreshToken
+        }
+
+        val sharedPref = context.getSharedPreferences("TechZ_Prefs", Context.MODE_PRIVATE)
+        with(sharedPref.edit()) {
+            putString("ACCESS_TOKEN", token)
+            if (newRefreshToken != null) {
+                putString("REFRESH_TOKEN", refreshToken)
+            }
             apply()
         }
     }
 
     fun logout(context: Context) {
+        val tokenToRevoke = refreshToken
+        if (!tokenToRevoke.isNullOrEmpty()) {
+            try {
+                RetrofitClient.instance.logout(mapOf("refreshToken" to tokenToRevoke))
+                    .enqueue(object : retrofit2.Callback<Void> {
+                        override fun onResponse(call: retrofit2.Call<Void>, response: retrofit2.Response<Void>) {
+                            clearLocalData(context)
+                        }
+
+                        override fun onFailure(call: retrofit2.Call<Void>, t: Throwable) {
+                            clearLocalData(context)
+                        }
+                    })
+            } catch (e: Exception) {
+                clearLocalData(context)
+            }
+        } else {
+            clearLocalData(context)
+        }
+    }
+
+    private fun clearLocalData(context: Context) {
         currentUserId = null
         currentUserName = null
         currentUserRole = null
         currentUserPhone = null
         currentUserAddress = null
         token = null
+        refreshToken = null
         val sharedPref = context.getSharedPreferences("TechZ_Prefs", Context.MODE_PRIVATE)
         with(sharedPref.edit()) {
             clear()
             apply()
         }
+        Toast.makeText(context, "Đăng xuất thành công", Toast.LENGTH_SHORT).show()
     }
     //gọi khi update
     fun updateSession(context: Context, name: String, phone: String, address: String) {
@@ -81,24 +127,19 @@ object UserSession {
 
     fun initSession(context: Context) {
         val sharedPref = context.getSharedPreferences("TechZ_Prefs", Context.MODE_PRIVATE)
-
         val savedToken = sharedPref.getString("ACCESS_TOKEN", null)
+        val savedRefreshToken = sharedPref.getString("REFRESH_TOKEN", null)
 
-        // 1. Kiểm tra: Có token VÀ Token chưa hết hạn
-        if (savedToken != null && !isTokenExpired(savedToken)) {
+        if (savedToken != null) {
             val savedId = sharedPref.getInt("USER_ID", -1)
             if (savedId != -1) {
                 currentUserId = savedId
-                token = savedToken // Gán token để RetrofitClient đọc được
+                token = savedToken
+                refreshToken = savedRefreshToken
                 currentUserName = sharedPref.getString("USER_NAME", null)
                 currentUserRole = sharedPref.getString("USER_ROLE", "user")
                 currentUserPhone = sharedPref.getString("USER_PHONE", "")
                 currentUserAddress = sharedPref.getString("USER_ADDRESS", "")
-            }
-        } else {
-            // 2. Nếu token có nhưng đã hết hạn -> Xóa session (Logout)
-            if (savedToken != null) {
-                logout(context)
             }
         }
     }
@@ -110,7 +151,6 @@ object UserSession {
             val payload = String(Base64.decode(parts[1], Base64.URL_SAFE))
             val jsonObject = JSONObject(payload)
 
-            // Lấy thời gian hết hạn (exp)
             if (jsonObject.has("exp")) {
                 val exp = jsonObject.getLong("exp")
                 val now = System.currentTimeMillis() / 1000
@@ -121,5 +161,7 @@ object UserSession {
         }
         return false
     }
+
+
 
 }

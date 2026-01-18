@@ -151,7 +151,7 @@ fun AdminOrderScreen(navController: NavHostController) {
             TopAppBar(
                 title = { Text("Quản Lý Đơn Hàng", fontWeight = FontWeight.Bold, color = Color.White) },
                 navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
+                    IconButton(onClick = { navController.navigate(Screen.AdminDashboard.route) }) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Color.White)
                     }
                 },

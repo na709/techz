@@ -65,9 +65,16 @@ fun RegisterScreen(
                 if (response.isSuccessful && response.body()?.success == true) {
                     val user = response.body()?.user
                     val role = response.body()?.role ?:"user"
-                    val token = response.body()?.token ?:""
+                    val accessToken = response.body()?.accessToken ?:""
+                    val refreshToken = response.body()?.refreshToken?:""
                     user?.let {
-                        UserSession.login(context,it,role,token)
+                        UserSession.login(
+                            context = context,
+                            user = user,
+                            role = role,
+                            accessToken = accessToken,
+                            newRefreshToken = refreshToken
+                        )
                     }
                     Toast.makeText(context, "Đăng ký thành công!", Toast.LENGTH_LONG).show()
                     onRegister()

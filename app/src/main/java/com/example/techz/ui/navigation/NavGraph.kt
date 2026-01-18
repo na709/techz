@@ -24,6 +24,7 @@ import com.example.techz.ui.screens.account.AccountScreen
 import com.example.techz.ui.screens.admin.AddVoucherScreen
 import com.example.techz.ui.screens.admin.AdminDashboardScreen
 import com.example.techz.ui.screens.admin.AdminOrderScreen
+import com.example.techz.ui.screens.admin.AdminProductScreen
 import com.example.techz.ui.screens.cart.CartScreen
 import com.example.techz.ui.screens.home.HomeScreen
 import com.example.techz.ui.screens.login.LoginScreen
@@ -228,6 +229,7 @@ fun AppNavGraph(
             AccountDetailScreen(navController = navController)
         }
 
+
         composable(Screen.AdminDashboard.route) {
             AdminDashboardScreen(
                 navController = navController,
@@ -241,7 +243,18 @@ fun AppNavGraph(
                     navController.navigate(Screen.AdminVoucher.route) {
                         popUpTo(0) { inclusive = true }
                     }
+                },
+                onGoToProductList = {
+                    navController.navigate(Screen.AdminProductList.route) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                },
+                onGoToOrderList = {
+                    navController.navigate(Screen.AdminOrder.route) {
+                        popUpTo(0) { inclusive = true }
+                    }
                 }
+
             )
         }
         composable(Screen.AdminVoucher.route) {
@@ -253,6 +266,12 @@ fun AppNavGraph(
                     }
                 }
                 )}
+        composable(Screen.AdminOrder.route) {
+            AdminOrderScreen(navController = navController)
+        }
+        composable(Screen.AdminProductList.route) {
+            AdminProductScreen(navController = navController)
+        }
         composable(Screen.AdminOrder.route) {
             AdminOrderScreen(navController = navController)
         }

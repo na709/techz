@@ -20,7 +20,6 @@ data class User(
     @SerializedName("address") val address: String?,
     @SerializedName("permission") val permission: String? = null
 )
-
 // 2. Model chung cho Response (Vì cả Login và Register đều trả về cấu trúc giống nhau)
 data class AuthResponse(
     @SerializedName("success") val success: Boolean,
@@ -28,15 +27,15 @@ data class AuthResponse(
     @SerializedName("role") val role: String,
     @SerializedName("token") val token: String?,
     @SerializedName("user") val user: User?, // Có thể null
-    @SerializedName("orderId") val orderId: Int?
+    @SerializedName("orderId") val orderId: Int?,
+    @SerializedName("accessToken") val accessToken: String,
+    @SerializedName("refreshToken")val refreshToken: String
 )
-
 // 3. Body gửi lên khi Login
 data class LoginRequest(
     @SerializedName("username") val username: String,
     @SerializedName("password") val password: String
 )
-
 // body post lên server khi register
 data class RegisterRequest(
     @SerializedName("name") val name: String,
@@ -52,15 +51,6 @@ data class ChangePasswordRequest(
     @SerializedName("oldPassword") val oldPassword: String,
     @SerializedName("newPassword") val newPassword: String
 )
-
-data class CreateManagerRequest(
-    @SerializedName("current_admin_id") val currentAdminId: Int,
-    @SerializedName("username") val username: String,
-    @SerializedName("password") val password: String,
-    @SerializedName("name") val name: String,
-    @SerializedName("email") val email: String
-)
-
 //đẩy data lên để update thông tin
 data class UpdateProfileRequest(
     @SerializedName("id") val id: Int,
