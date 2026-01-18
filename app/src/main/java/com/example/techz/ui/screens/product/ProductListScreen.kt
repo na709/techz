@@ -188,8 +188,15 @@ fun ProductListScreen(
                             items(displayList) { product ->
                                 ProductItem(
                                     product = product,
-                                    onClick = { onProductClick(it) },
+                                    onClick = { id-> if (product.stock > 0) {//check xem con hang hay khong
+                                        onProductClick(id)
+                                    } else {
+                                        Toast.makeText(context, "Sản phẩm đang tạm hết hàng!", Toast.LENGTH_SHORT).show()
+                                    } },
                                     onAddToCart = { selectedProduct ->
+                                        if (selectedProduct.stock <= 0) {
+                                            Toast.makeText(context, "Sản phẩm đã hết hàng, không thể thêm vào giỏ!", Toast.LENGTH_SHORT).show()
+                                        } else {
 
                                         // 1. Kiểm tra đăng nhập
                                         val userId = UserSession.currentUserId
@@ -220,7 +227,7 @@ fun ProductListScreen(
                                                 }
                                             })
                                         }
-                                    }
+                                    } }
                                 )
                             }
                         }
