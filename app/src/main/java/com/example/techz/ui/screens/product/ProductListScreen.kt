@@ -188,11 +188,9 @@ fun ProductListScreen(
                             items(displayList) { product ->
                                 ProductItem(
                                     product = product,
-                                    onClick = { id-> if (product.stock > 0) {//check xem con hang hay khong
+                                    onClick = { id->
                                         onProductClick(id)
-                                    } else {
-                                        Toast.makeText(context, "Sản phẩm đang tạm hết hàng!", Toast.LENGTH_SHORT).show()
-                                    } },
+                                     },
                                     onAddToCart = { selectedProduct ->
                                         if (selectedProduct.stock <= 0) {
                                             Toast.makeText(context, "Sản phẩm đã hết hàng, không thể thêm vào giỏ!", Toast.LENGTH_SHORT).show()

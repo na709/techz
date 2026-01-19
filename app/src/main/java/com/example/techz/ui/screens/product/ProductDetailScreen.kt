@@ -84,8 +84,12 @@ fun ProductDetailScreen(
                     .background(Color.White)
                     .padding(16.dp)
             ) {
+                val isOutOfStock = product.stock <= 0
                 Button(
                     onClick = {
+                        if (isOutOfStock) {
+                            Toast.makeText(context, "Sản phẩm đã hết hàng!", Toast.LENGTH_SHORT).show()
+                        } else {
                         val userId = UserSession.currentUserId
                         if (userId == null) {
                             Toast.makeText(context, "Vui lòng đăng nhập để mua hàng!", Toast.LENGTH_SHORT).show()
@@ -112,9 +116,11 @@ fun ProductDetailScreen(
                                 }
                             })
                         }
-                    },
+                    }},
                     modifier = Modifier.fillMaxWidth().height(50.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00A9FF)),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (isOutOfStock) Color.Gray else Color(0xFF00A9FF)
+                    ),
                     shape = RoundedCornerShape(8.dp)
                 ) {
                     Text("Thêm vào giỏ hàng", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)

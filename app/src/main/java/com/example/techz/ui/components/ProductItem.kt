@@ -91,7 +91,7 @@ fun ProductItem(
                         onClick = { onAddToCart(product) },
                         modifier = Modifier.size(36.dp),
                         contentPadding = PaddingValues(0.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00A9FF)),
+                        colors = ButtonDefaults.buttonColors(containerColor = if (product.stock<=0) Color.Gray else Color(0xFF00A9FF)),
                         shape = RoundedCornerShape(8.dp)
                     ) {
                         Icon(
