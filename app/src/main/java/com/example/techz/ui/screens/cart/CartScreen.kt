@@ -48,24 +48,16 @@ fun CartScreen(
     onMissingInfo: () -> Unit
 ) {
     val context = LocalContext.current
-
-    // Dữ liệu giỏ hàng (Reactive State từ CartManager)
     val cartItems = CartManager.cartItems
-    val rawTotalPrice = CartManager.getTotalPrice() // Giá gốc (chưa trừ voucher)
-
-    // --- STATE QUẢN LÝ VOUCHER ---
+    val rawTotalPrice = CartManager.getTotalPrice()
     var availableVouchers by remember { mutableStateOf<List<Voucher>>(emptyList()) }
     var selectedVoucher by remember { mutableStateOf<Voucher?>(null) }
     var discountAmount by remember { mutableStateOf(0.0) }
     var showVoucherDialog by remember { mutableStateOf(false) }
-
-    // --- STATE THANH TOÁN ---
     var paymentMethods by remember { mutableStateOf<List<PaymentMethod>>(emptyList()) }
     var selectedMethodObj by remember { mutableStateOf<PaymentMethod?>(null) }
-
     val finalPrice = (rawTotalPrice - discountAmount).coerceAtLeast(0.0)
 
-    // --- 1. HÀM LOAD VOUCHER RIÊNG BIỆT (Để gọi lại khi cần refresh) ---
     fun loadVouchers() {
         if (UserSession.isLoggedIn) {
             RetrofitClient.instance.getPaymentMethods().enqueue(object : Callback<List<PaymentMethod>> {
@@ -73,7 +65,6 @@ fun CartScreen(
                     if (response.isSuccessful) {
                         val methods = response.body() ?: emptyList()
                         paymentMethods = methods
-                        // Mặc định chọn cái đầu tiên (thường là COD)
                         if (methods.isNotEmpty()) selectedMethodObj = methods[0]
                     }
                 }
@@ -92,33 +83,26 @@ fun CartScreen(
         }
     }
 
-    // --- 2. KHỞI TẠO DỮ LIỆU LẦN ĐẦU ---
     LaunchedEffect(Unit) {
         UserSession.initSession(context)
         CartManager.loadCart(context)
 
-        // Nếu đã đăng nhập -> Gọi API lấy Voucher và Phương thức thanh toán
         if (UserSession.isLoggedIn) {
-            // Load Payment Methods
             RetrofitClient.instance.getPaymentMethods().enqueue(object : Callback<List<PaymentMethod>> {
                 override fun onResponse(call: Call<List<PaymentMethod>>, response: Response<List<PaymentMethod>>) {
                     if (response.isSuccessful) {
                         val methods = response.body() ?: emptyList()
                         paymentMethods = methods
-                        // Mặc định chọn cái đầu tiên (thường là COD)
                         if (methods.isNotEmpty()) selectedMethodObj = methods[0]
                     }
                 }
                 override fun onFailure(call: Call<List<PaymentMethod>>, t: Throwable) {}
             })
 
-            // Load Vouchers lần đầu
             loadVouchers()
         }
     }
 
-    // --- 3. LOGIC TỰ ĐỘNG CẬP NHẬT KHI GIÁ THAY ĐỔI ---
-    // Nếu người dùng xóa bớt sản phẩm khiến tổng tiền < đơn tối thiểu -> Hủy voucher
     LaunchedEffect(rawTotalPrice) {
         selectedVoucher?.let { voucher ->
             if (rawTotalPrice < voucher.minOrder) {
@@ -126,7 +110,6 @@ fun CartScreen(
                 discountAmount = 0.0
                 Toast.makeText(context, "Đơn hàng không còn đủ điều kiện dùng Voucher", Toast.LENGTH_SHORT).show()
             } else {
-                // Tính lại tiền giảm (vì % giảm dựa trên tổng tiền mới)
                 val calculated = rawTotalPrice * voucher.percent / 100
                 discountAmount = if (calculated > voucher.maxDiscount) voucher.maxDiscount else calculated
             }
@@ -153,13 +136,11 @@ fun CartScreen(
                     shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)
                 ) {
                     Column {
-                        // A. MỤC CHỌN VOUCHER
                         VoucherSelector(
                             selectedVoucher = selectedVoucher,
                             discountValue = discountAmount,
                             onClick = {
                                 if (UserSession.isLoggedIn) {
-                                    // >>> FIX QUAN TRỌNG: Gọi API load lại voucher mới nhất ngay khi bấm vào <<<
                                     loadVouchers()
                                     showVoucherDialog = true
                                 } else {
@@ -223,17 +204,14 @@ fun CartScreen(
         }
     }
 
-    // --- DIALOG CHỌN VOUCHER ---
     if (showVoucherDialog) {
         VoucherSelectionDialog(
             vouchers = availableVouchers,
             onDismiss = { showVoucherDialog = false },
             onSelect = { voucher ->
-                // Kiểm tra điều kiện đơn tối thiểu
                 if (rawTotalPrice < voucher.minOrder) {
                     Toast.makeText(context, "Đơn hàng chưa đủ ${formatCurrency(voucher.minOrder)} để dùng mã này!", Toast.LENGTH_SHORT).show()
                 } else {
-                    // Tính tiền giảm
                     val calculated = rawTotalPrice * voucher.percent / 100
                     val finalDiscount = if (calculated > voucher.maxDiscount) voucher.maxDiscount else calculated
 
@@ -250,15 +228,10 @@ fun CartScreen(
         )
     }
 }
-
-// =========================================================================
-// CÁC COMPONENT CON (UI)
-// =========================================================================
-
 @Composable
 fun CartItemRow(item: CartItem, context: Context) {
     // Đảm bảo URL ảnh đúng với Server của bạn
-    val baseUrl = "http://103.228.36.78:3000/images/"
+    val baseUrl = "https://s3.cloudfly.vn/techz-product-images/images/"
     val rawImageName = item.product.image ?: ""
     val fullImageUrl = if (rawImageName.startsWith("http")) rawImageName else baseUrl + rawImageName
 
@@ -301,15 +274,13 @@ fun CartItemRow(item: CartItem, context: Context) {
                     Text("${item.quantity}", modifier = Modifier.padding(horizontal = 8.dp), fontWeight = FontWeight.Bold)
                     IconButton(
                         onClick = {
-                            //  Kiểm tra tồn kho trước khi tăng
                             if (item.quantity < item.product.stock) {
                                 CartManager.updateQuantity(context, item.product.id, 1)
                             } else {
-                                Toast.makeText(context, "Đã đạt giới hạn số lượng tồn kho!", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, "Số lượng bạn chọn đã là mức tối đa của sản phầm này!!", Toast.LENGTH_SHORT).show()
                             }
                         }
                     ) {
-                        // Nếu hết hàng thì đổi màu nút thành xám
                         val isMaxReached = item.quantity >= item.product.stock
                         Text(
                             "+",

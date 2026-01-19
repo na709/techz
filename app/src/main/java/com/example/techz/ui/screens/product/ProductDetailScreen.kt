@@ -39,7 +39,7 @@ import kotlin.math.abs
 @Composable
 fun ProductDetailScreen(
     product: Product,
-    navController: NavController, // <-- Đã thêm tham số này
+    navController: NavController,
     onBack: () -> Unit,
     onProductClick: (Product) -> Unit
 ) {
@@ -87,9 +87,6 @@ fun ProductDetailScreen(
                 val isOutOfStock = product.stock <= 0
                 Button(
                     onClick = {
-                        if (isOutOfStock) {
-                            Toast.makeText(context, "Sản phẩm đã hết hàng!", Toast.LENGTH_SHORT).show()
-                        } else {
                         val userId = UserSession.currentUserId
                         if (userId == null) {
                             Toast.makeText(context, "Vui lòng đăng nhập để mua hàng!", Toast.LENGTH_SHORT).show()
@@ -116,8 +113,9 @@ fun ProductDetailScreen(
                                 }
                             })
                         }
-                    }},
+                    },
                     modifier = Modifier.fillMaxWidth().height(50.dp),
+                    enabled = product.stock >0,
                     colors = ButtonDefaults.buttonColors(
                         containerColor = if (isOutOfStock) Color.Gray else Color(0xFF00A9FF)
                     ),
