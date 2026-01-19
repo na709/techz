@@ -299,8 +299,23 @@ fun CartItemRow(item: CartItem, context: Context) {
                         Text("—", fontWeight = FontWeight.Bold, fontSize = 18.sp)
                     }
                     Text("${item.quantity}", modifier = Modifier.padding(horizontal = 8.dp), fontWeight = FontWeight.Bold)
-                    IconButton(onClick = { CartManager.updateQuantity(context, item.product.id, 1) }) {
-                        Text("+", fontSize = 20.sp)
+                    IconButton(
+                        onClick = {
+                            //  Kiểm tra tồn kho trước khi tăng
+                            if (item.quantity < item.product.stock) {
+                                CartManager.updateQuantity(context, item.product.id, 1)
+                            } else {
+                                Toast.makeText(context, "Đã đạt giới hạn số lượng tồn kho!", Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                    ) {
+                        // Nếu hết hàng thì đổi màu nút thành xám
+                        val isMaxReached = item.quantity >= item.product.stock
+                        Text(
+                            "+",
+                            fontSize = 20.sp,
+                            color = if (isMaxReached) Color.LightGray else Color.Black
+                        )
                     }
                 }
             }
