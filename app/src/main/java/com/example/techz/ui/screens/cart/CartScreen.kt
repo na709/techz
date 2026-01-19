@@ -285,6 +285,12 @@ fun CartItemRow(item: CartItem, context: Context) {
                     fontSize = 13.sp,
                     fontWeight = FontWeight.Bold
                 )
+                Text(
+                    text = "Còn lại: ${item.product.stock}",
+                    fontSize = 15.sp,
+                    color = Color.Green,
+                    modifier = Modifier.padding(top = 2.dp)
+                )
                 Row(
                     modifier = Modifier.align(Alignment.End),
                     verticalAlignment = Alignment.CenterVertically
