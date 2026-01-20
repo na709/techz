@@ -81,7 +81,7 @@ fun AppNavGraph(
                     navController.navigate("${Screen.ProductList.route}/$category")
                 },
                 onGoToCart = { navController.navigate(Screen.Cart.route) },
-                onViewAll = { navController.navigate(Screen.ProductList.route) }
+                onViewAll = { navController.navigate(Screen.ProductList.route+"/All") }
             )
         }
 

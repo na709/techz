@@ -26,7 +26,7 @@ interface ApiService {
     fun logout(@Body body: Map<String, String>): Call<Void>
 
     @POST("api/refresh-token")
-    fun refreshToken(@Body body: Map<String, String>): Call<Map<String, String>>
+    fun refreshToken(@Body body: Map<String, String>): Call<AuthResponse>
 
 
     @GET("api/payment-methods")

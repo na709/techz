@@ -214,7 +214,7 @@ fun PaddingText(text: String) {
         modifier = Modifier.padding(start = 16.dp, bottom = 8.dp)
     )
 }
-@Composable//new
+@Composable
 fun CategoryItem(category: String, onClick: () -> Unit) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -226,7 +226,7 @@ fun CategoryItem(category: String, onClick: () -> Unit) {
             modifier = Modifier
                 .size(60.dp)
                 .clip(RoundedCornerShape(12.dp))
-                .background(Color(0xFFE3F2FD)), // Màu nền nhẹ
+                .background(Color(0xFFE3F2FD)),
             contentAlignment = Alignment.Center
         ) {
 
