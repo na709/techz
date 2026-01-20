@@ -162,6 +162,13 @@ fun ProductDetailScreen(
                     fontWeight = FontWeight.Bold,
                     color = Color.Red
                 )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "Số lượng còn lại: ${product.stock}",
+                    fontSize = 16.sp,
+                    color = if (product.stock > 0) Color.Blue else Color.Red,
+                    fontWeight = FontWeight.Medium
+                )
                 Spacer(modifier = Modifier.height(16.dp))
 
                 Text("Mô tả sản phẩm:", fontSize = 16.sp, fontWeight = FontWeight.Bold)
