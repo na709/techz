@@ -11,7 +11,7 @@ import org.json.JSONObject
 
 object UserSession {
     var token by mutableStateOf<String?>(null)
-        private set
+        public set
     var refreshToken by mutableStateOf<String?>(null)
         private set
     var currentUserName by mutableStateOf<String?>(null)
@@ -73,7 +73,12 @@ object UserSession {
         }
     }
 
-    fun logout(context: Context) {
+    fun logout(context: Context, forceClear: Boolean = false) {
+        if (forceClear) {
+            clearLocalData(context)
+            return
+        }
+
         val tokenToRevoke = refreshToken
         if (!tokenToRevoke.isNullOrEmpty()) {
             try {
@@ -82,7 +87,6 @@ object UserSession {
                         override fun onResponse(call: retrofit2.Call<Void>, response: retrofit2.Response<Void>) {
                             clearLocalData(context)
                         }
-
                         override fun onFailure(call: retrofit2.Call<Void>, t: Throwable) {
                             clearLocalData(context)
                         }
@@ -108,7 +112,7 @@ object UserSession {
             clear()
             apply()
         }
-        Toast.makeText(context, "Đăng xuất thành công", Toast.LENGTH_SHORT).show()
+        Toast.makeText(context, "Đã đăng xuất", Toast.LENGTH_SHORT).show()
     }
     //gọi khi update
     fun updateSession(context: Context, name: String, phone: String, address: String) {
@@ -161,7 +165,4 @@ object UserSession {
         }
         return false
     }
-
-
-
 }

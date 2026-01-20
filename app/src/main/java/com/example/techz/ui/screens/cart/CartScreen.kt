@@ -467,8 +467,6 @@ fun VoucherSelectionDialog(
                                         Text("Đơn tối thiểu: ${formatCurrency(voucher.minOrder)}", fontSize = 12.sp, color = Color.Gray)
                                         Text("Giảm tối đa: ${formatCurrency(voucher.maxDiscount)}", fontSize = 12.sp, color = Color.Gray)
                                     }
-
-                                    // Badge %
                                     Surface(
                                         color = Color(0xFFFFE0B2),
                                         shape = RoundedCornerShape(8.dp)

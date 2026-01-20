@@ -11,17 +11,11 @@ import retrofit2.Callback
 import retrofit2.Response
 
 object CartManager {
-    // State chứa danh sách sản phẩm trong giỏ (Tự động update UI Jetpack Compose)
     val cartItems = mutableStateListOf<CartItem>()
-
-    // Hàm tính tổng tiền gốc (Chưa trừ giảm giá)
     fun getTotalPrice(): Double {
         return cartItems.sumOf { it.product.price * it.quantity }
     }
 
-    // ------------------------------------------------------------------
-    // 1. Load giỏ hàng từ Server
-    // ------------------------------------------------------------------
     fun loadCart(context: Context) {
         val userId = UserSession.currentUserId ?: return
         RetrofitClient.instance.getCart(userId).enqueue(object : Callback<List<CartItem>> {
@@ -32,14 +26,11 @@ object CartManager {
                 }
             }
             override fun onFailure(call: Call<List<CartItem>>, t: Throwable) {
-                // Có thể log lỗi ở đây
+                // debug lỗi
             }
         })
     }
 
-    // ------------------------------------------------------------------
-    // 2. Cập nhật số lượng
-    // ------------------------------------------------------------------
     fun updateQuantity(context: Context, productId: Int, change: Int) {
         val index = cartItems.indexOfFirst { it.product.id == productId }
         if (index == -1) return
@@ -47,13 +38,11 @@ object CartManager {
         val currentItem = cartItems[index]
         val newQuantity = currentItem.quantity + change
 
-        // Kiểm tra số lượng tối thiểu
         if (newQuantity < 1) {
             Toast.makeText(context, "Số lượng tối thiểu là 1", Toast.LENGTH_SHORT).show()
             return
         }
 
-        // Cập nhật UI ngay lập tức (Optimistic Update)
         cartItems[index] = currentItem.copy(quantity = newQuantity)
 
         val userId = UserSession.currentUserId ?: return
