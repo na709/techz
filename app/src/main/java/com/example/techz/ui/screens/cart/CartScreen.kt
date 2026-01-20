@@ -49,7 +49,23 @@ fun CartScreen(
 ) {
     val context = LocalContext.current
     val cartItems = CartManager.cartItems
-    val rawTotalPrice = CartManager.getTotalPrice()
+
+    //new-------------
+    var selectedItemIds by remember { mutableStateOf<Set<Int>>(emptySet()) }
+    LaunchedEffect(cartItems) {
+        if (selectedItemIds.isEmpty() && cartItems.isNotEmpty()) {
+            selectedItemIds = cartItems.map { it.product.id }.toSet()
+        }
+    }
+    val selectedCartItems = cartItems.filter { it.product.id in selectedItemIds }
+    // [SỬA] Tính tổng tiền chỉ dựa trên các món ĐƯỢC CHỌN
+    val rawTotalPrice = remember(cartItems, selectedItemIds.size, cartItems.sumOf { it.quantity }) {
+        cartItems.filter { it.product.id in selectedItemIds }
+            .sumOf { it.product.price * it.quantity }
+    }
+    //--------------------------
+
+
     var availableVouchers by remember { mutableStateOf<List<Voucher>>(emptyList()) }
     var selectedVoucher by remember { mutableStateOf<Voucher?>(null) }
     var discountAmount by remember { mutableStateOf(0.0) }
@@ -57,6 +73,8 @@ fun CartScreen(
     var paymentMethods by remember { mutableStateOf<List<PaymentMethod>>(emptyList()) }
     var selectedMethodObj by remember { mutableStateOf<PaymentMethod?>(null) }
     val finalPrice = (rawTotalPrice - discountAmount).coerceAtLeast(0.0)
+
+
 
     fun loadVouchers() {
         if (UserSession.isLoggedIn) {
@@ -102,7 +120,9 @@ fun CartScreen(
             loadVouchers()
         }
     }
+    //new-------------------
 
+    // Kiểm tra lại Voucher mỗi khi tổng tiền thay đổi (chọn/bỏ chọn món)
     LaunchedEffect(rawTotalPrice) {
         selectedVoucher?.let { voucher ->
             if (rawTotalPrice < voucher.minOrder) {
@@ -115,7 +135,25 @@ fun CartScreen(
             }
         }
     }
+    // Hàm toggle chọn 1 sản phẩm
+    fun toggleSelection(productId: Int) {
+        selectedItemIds = if (selectedItemIds.contains(productId)) {
+            selectedItemIds - productId
+        } else {
+            selectedItemIds + productId
+        }
+    }
 
+    // Hàm toggle chọn tất cả
+    fun toggleSelectAll() {
+        selectedItemIds = if (selectedItemIds.size == cartItems.size) {
+            emptySet() // Bỏ chọn hết
+        } else {
+            cartItems.map { it.product.id }.toSet() // Chọn hết
+        }
+    }
+
+    //-----------------------------
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
@@ -164,17 +202,33 @@ fun CartScreen(
                         MinimalPaymentBottomBar(
                             totalPrice = finalPrice,
                             originalPrice = rawTotalPrice,
+                            //new----------
+                            isAllSelected = selectedItemIds.size == cartItems.size && cartItems.isNotEmpty(),
+                            onSelectAllClick = { toggleSelectAll() },
+
                             onCheckoutClick = {
-                                CartManager.placeOrder(
-                                    context = context,
-                                    id_phuong_thuc = selectedMethodObj?.id_phuong_thuc ?: 1,
-                                    voucherId = selectedVoucher?.id,
-                                    discount = discountAmount
-                                ) {
-                                    Toast.makeText(context, "Đặt hàng thành công!", Toast.LENGTH_LONG).show()
-                                    onCheckout()
+                                // 1. Lấy danh sách các món đang được chọn
+                                val itemsToBuy = cartItems.filter { it.product.id in selectedItemIds }
+
+                                // 2. Kiểm tra nếu chưa chọn gì thì báo lỗi
+                                if (itemsToBuy.isEmpty()) {
+                                    Toast.makeText(context, "Vui lòng chọn sản phẩm để thanh toán!", Toast.LENGTH_SHORT).show()
+                                } else {
+                                    // 3. Gọi hàm đặt hàng với danh sách đã chọn
+                                    CartManager.placeOrder(
+                                        context = context,
+                                        selectedItems = itemsToBuy, // <--- THÊM DÒNG NÀY VÀO
+                                        id_phuong_thuc = selectedMethodObj?.id_phuong_thuc ?: 1,
+                                        voucherId = selectedVoucher?.id,
+                                        discount = discountAmount
+                                    ) {
+                                        // Callback thành công
+                                        onCheckout()
+                                    }
                                 }
                             }
+                            //---------
+
                         )
                     }
                 }
@@ -196,10 +250,26 @@ fun CartScreen(
                     .background(Color(0xFFF5F5F5)),
                 contentPadding = PaddingValues(16.dp)
             ) {
+//                items(cartItems) { item ->
+//                    CartItemRow(item, context)
+//                    Spacer(modifier = Modifier.height(8.dp))
+//                }
+
+                //new-------
                 items(cartItems) { item ->
-                    CartItemRow(item, context)
+                    // 1. Kiểm tra xem item này có đang được chọn không
+                    val isSelected = selectedItemIds.contains(item.product.id)
+
+                    // 2. Truyền tham số isSelected và hàm toggle vào
+                    CartItemRow(
+                        item = item,
+                        context = context,
+                        isSelected = isSelected, // <--- Đã thêm
+                        onToggleSelect = { toggleSelection(item.product.id) } // <--- Đã thêm
+                    )
                     Spacer(modifier = Modifier.height(8.dp))
                 }
+                //----------
             }
         }
     }
@@ -229,19 +299,33 @@ fun CartScreen(
     }
 }
 @Composable
-fun CartItemRow(item: CartItem, context: Context) {
+fun CartItemRow(item: CartItem,
+                context: Context,
+                //new----
+                isSelected: Boolean,
+                onToggleSelect: () -> Unit
+                //--------
+) {
     // Đảm bảo URL ảnh đúng với Server của bạn
     val baseUrl = "https://s3.cloudfly.vn/techz-product-images/images/"
     val rawImageName = item.product.image ?: ""
     val fullImageUrl = if (rawImageName.startsWith("http")) rawImageName else baseUrl + rawImageName
 
     Card(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp),
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp).clickable { onToggleSelect() }, // Click vào card để chọn/bỏ chọn
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         shape = RoundedCornerShape(8.dp)
     ) {
         Row(modifier = Modifier.padding(8.dp), verticalAlignment = Alignment.CenterVertically) {
+            //new---
+            Checkbox(
+                checked = isSelected,
+                onCheckedChange = { onToggleSelect() },
+                colors = CheckboxDefaults.colors(checkedColor = Color(0xFF00A9FF))
+            )
+            //----
+
             AsyncImage(
                 model = fullImageUrl,
                 contentDescription = null,
@@ -385,6 +469,10 @@ fun PaymentMethodSelector(
 fun MinimalPaymentBottomBar(
     totalPrice: Double,
     originalPrice: Double,
+    //new---
+    isAllSelected: Boolean,
+    onSelectAllClick: () -> Unit,
+    //-----
     onCheckoutClick: () -> Unit
 ) {
     Row(
@@ -392,6 +480,21 @@ fun MinimalPaymentBottomBar(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
+        //new---------
+        // Checkbox Chọn tất cả
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.clickable { onSelectAllClick() }
+        ) {
+            Checkbox(
+                checked = isAllSelected,
+                onCheckedChange = { onSelectAllClick() },
+                colors = CheckboxDefaults.colors(checkedColor = Color(0xFF00A9FF))
+            )
+            Text("Tất cả", fontSize = 14.sp)
+        }
+        //--------------
+
         Column {
             Text("Tổng thanh toán:", fontSize = 14.sp, color = Color.Gray)
 

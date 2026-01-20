@@ -98,18 +98,26 @@ object CartManager {
     // ------------------------------------------------------------------
     fun placeOrder(
         context: Context,
+        //new
+        selectedItems: List<CartItem>, // <--- NHẬN DANH SÁCH MÓN ĐÃ CHỌN
+        //-----
         id_phuong_thuc: Int, // 1: COD, 2: MOMO, 3: VNPAY...
         voucherId: Int?,
         discount: Double,
         onSuccess: () -> Unit
     ) {
         val userId = UserSession.currentUserId
+
         if (userId == null) {
             Toast.makeText(context, "Phiên đăng nhập hết hạn!", Toast.LENGTH_SHORT).show()
             return
         }
-        if (cartItems.isEmpty()) {
-            Toast.makeText(context, "Giỏ hàng trống!", Toast.LENGTH_SHORT).show()
+//        if (cartItems.isEmpty()) {
+//            Toast.makeText(context, "Giỏ hàng trống!", Toast.LENGTH_SHORT).show()
+//            return
+//        }
+        if (selectedItems.isEmpty()) { // SỬA: Chỉ check danh sách chọn
+            Toast.makeText(context, "Chưa chọn sản phẩm nào!", Toast.LENGTH_SHORT).show()
             return
         }
 
@@ -122,11 +130,20 @@ object CartManager {
         }
 
         // 1. Tính toán giá tiền
-        val rawTotal = getTotalPrice()
+        //sửa---
+        val rawTotal = selectedItems.sumOf { it.product.price * it.quantity } // SỬA: Chỉ tính món chọn
+        //------
         val finalPrice = (rawTotal - discount).coerceAtLeast(0.0)
 
         // 2. Map dữ liệu cart sang model OrderDetailRequest
-        val listOrderDetails = cartItems.map { item ->
+//        val listOrderDetails = cartItems.map { item ->
+//            OrderDetailRequest(
+//                productId = item.product.id,
+//                quantity = item.quantity,
+//                price = item.product.price
+//            )
+//        }
+        val listOrderDetails = selectedItems.map { item -> // SỬA: Chỉ map món chọn
             OrderDetailRequest(
                 productId = item.product.id,
                 quantity = item.quantity,
@@ -156,10 +173,11 @@ object CartManager {
                     // --- XỬ LÝ THANH TOÁN ---
                     if (id_phuong_thuc == 2 && orderId != null) {
                         // Nếu chọn Ví Momo -> Gọi hàm thanh toán Momo
-                        initiateMomoPayment(context, orderId, finalPrice.toLong(), onSuccess)
+                        // Truyền thêm selectedItems vào để xử lý sau khi thanh toán xong
+                        initiateMomoPayment(context, orderId, finalPrice.toLong(),selectedItems, onSuccess)
                     } else {
                         // Nếu là Tiền mặt (COD) hoặc ATM thường -> Thành công luôn
-                        handleOrderSuccess(userId, context, onSuccess)
+                        handleOrderSuccess(userId, context,selectedItems, onSuccess)
                     }
                 } else {
                     Toast.makeText(context, body?.message ?: "Đặt hàng thất bại", Toast.LENGTH_SHORT).show()
@@ -175,15 +193,43 @@ object CartManager {
     // --- CÁC HÀM PHỤ TRỢ (HELPER FUNCTIONS) ---
 
     // Xử lý khi đặt hàng thành công (Xóa giỏ hàng UI & Server, thông báo)
-    private fun handleOrderSuccess(userId: Int, context: Context, onSuccess: () -> Unit) {
-        cartItems.clear() // Xóa UI
-        clearServerCart(userId) // Xóa Database Server
+//    private fun handleOrderSuccess(userId: Int, context: Context, onSuccess: () -> Unit) {
+//        cartItems.clear() // Xóa UI
+//        clearServerCart(userId) // Xóa Database Server
+//        Toast.makeText(context, "Đặt hàng thành công!", Toast.LENGTH_SHORT).show()
+//        onSuccess() // Callback điều hướng về Home/Success
+//    }
+    private fun handleOrderSuccess(
+        userId: Int,
+        context: Context,
+        purchasedItems: List<CartItem>, // <--- MỚI
+        onSuccess: () -> Unit
+    ) {
+        // 1. Xóa khỏi giao diện (Chỉ xóa món đã mua)
+        val purchasedIds = purchasedItems.map { it.product.id }.toSet()
+        cartItems.removeIf { it.product.id in purchasedIds }
+
+        // 2. Xóa trên Server
+        // Vì API clearCart xóa tất cả, nên ta cần xóa từng món (hoặc sửa API Server).
+        // Cách an toàn hiện tại: Loop xóa từng món đã mua.
+        purchasedItems.forEach { item ->
+            RetrofitClient.instance.removeFromCart(CartRequest(userId, item.product.id, 0)).enqueue(object : Callback<AuthResponse>{
+                override fun onResponse(c: Call<AuthResponse>, r: Response<AuthResponse>) {}
+                override fun onFailure(c: Call<AuthResponse>, t: Throwable) {}
+            })
+        }
+
         Toast.makeText(context, "Đặt hàng thành công!", Toast.LENGTH_SHORT).show()
-        onSuccess() // Callback điều hướng về Home/Success
+        onSuccess()
     }
 
     // Gọi API lấy link thanh toán Momo
-    private fun initiateMomoPayment(context: Context, orderId: Int, amount: Long, onSuccess: () -> Unit) {
+    private fun initiateMomoPayment(
+        context: Context,
+        orderId: Int,
+        amount: Long,
+        purchasedItems: List<CartItem>,//Tham số mới được thêm vào
+        onSuccess: () -> Unit) {
         val req = MomoPaymentRequest(orderId.toString(), amount, "Thanh toan don #$orderId")
         RetrofitClient.instance.createMomoPayment(req).enqueue(object : Callback<MomoResponse> {
             override fun onResponse(call: Call<MomoResponse>, response: Response<MomoResponse>) {
@@ -197,7 +243,9 @@ object CartManager {
                         // Sau khi mở Momo thì coi như đặt hàng xong (Dọn dẹp giỏ hàng)
                         // (Lưu ý: Logic chuẩn cần check IPN callback, nhưng tạm thời clear luôn cho UX)
                         val userId = UserSession.currentUserId
-                        if (userId != null) handleOrderSuccess(userId, context, onSuccess)
+                        //new
+                        if (userId != null) handleOrderSuccess(userId, context, purchasedItems, onSuccess)
+                        //---
                     }
                 } else {
                     Toast.makeText(context, "Lỗi tạo link Momo: ${response.body()?.message}", Toast.LENGTH_SHORT).show()
