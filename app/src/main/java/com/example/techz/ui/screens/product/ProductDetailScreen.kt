@@ -85,6 +85,7 @@ fun ProductDetailScreen(
                     .padding(16.dp)
             ) {
                 val isOutOfStock = product.stock <= 0
+                val quantityInCart = CartManager.cartItems.find { it.product.id == product.id }?.quantity ?: 0
                 Button(
                     onClick = {
                         val userId = UserSession.currentUserId
@@ -115,7 +116,7 @@ fun ProductDetailScreen(
                         }
                     },
                     modifier = Modifier.fillMaxWidth().height(50.dp),
-                    enabled = product.stock >0,
+                    enabled = (product.stock >0)&& (quantityInCart<product.stock),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = if (isOutOfStock) Color.Gray else Color(0xFF00A9FF)
                     ),
