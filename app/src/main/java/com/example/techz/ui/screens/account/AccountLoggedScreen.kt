@@ -89,25 +89,21 @@ fun AccountLoggedScreen(
                     .padding(horizontal = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                // Button 1: Thông tin
                 MenuButton(
                     text = "Cập nhập thông tin của tôi",
                     onClick = onGoToInfo
                 )
 
-                // Button 2: Đơn hàng
                 MenuButton(
                     text = "Đơn hàng của tôi",
                     onClick = onGoToOrders
                 )
 
-                // Button 3: Đổi mật khẩu
                 MenuButton(
                     text = "Thay đổi mật khẩu",
                     onClick = onGoToChangePass
                 )
 
-                // Button 4: Hỗ trợ (Chưa có chức năng thì để trống hoặc Toast)
                 MenuButton(
                     text = "Hỗ trợ",
                     onClick = { /* Todo: Mở trang hỗ trợ */ }

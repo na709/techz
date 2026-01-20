@@ -41,14 +41,24 @@ fun RegisterScreen(
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
     var isLoading by remember { mutableStateOf(false) }
+    var isEmailError by remember { mutableStateOf(false) }
 
     //val logoUrl = "http://160.250.247.5/images/logo.jpg"
     val logoUrl = "https://dvna.site/images/logo.jpg"
     val brandColor = Color(0xFF00A9FF)
 
+    fun isValidEmail(email: String): Boolean {
+        return android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
+    }
+
     fun handleRegister() {
         if (name.isBlank() || email.isBlank() || username.isBlank() || password.isBlank()) {
             Toast.makeText(context, "Vui lòng điền đầy đủ thông tin!", Toast.LENGTH_SHORT).show()
+            return
+        }
+        if (!isValidEmail(email)) {
+            isEmailError = true
+            Toast.makeText(context, "Email không đúng định dạng (ví dụ: abc@gmail.com)", Toast.LENGTH_SHORT).show()
             return
         }
 
@@ -128,12 +138,30 @@ fun RegisterScreen(
 
         OutlinedTextField(
             value = email,
-            onValueChange = { email = it },
+            onValueChange = {
+                email = it
+                isEmailError = !isValidEmail(it) && it.isNotEmpty()
+            },
             label = { Text("Email") },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next)
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next),
+            isError = isEmailError,
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = if (isEmailError) Color.Red else brandColor,
+                unfocusedBorderColor = if (isEmailError) Color.Red else Color.Gray,
+                errorBorderColor = Color.Red,
+                errorLabelColor = Color.Red
+            )
         )
+        if (isEmailError) {
+            Text(
+                text = "Email phải có dạng abc@domain.com",
+                color = Color.Red,
+                fontSize = 12.sp,
+                modifier = Modifier.align(Alignment.Start).padding(start = 8.dp)
+            )
+        }
 
         Spacer(Modifier.height(12.dp))
 

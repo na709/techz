@@ -55,9 +55,7 @@ fun AccountDetailScreen(
 
     var isLoading by remember { mutableStateOf(false) }
 
-    // Hàm xử lý lưu thông tin
     fun handleSave() {
-        // 1. Validate
         if (name.isBlank() || phone.isBlank()) {
             Toast.makeText(context, "Vui lòng nhập tên và số điện thoại", Toast.LENGTH_SHORT).show()
             return
@@ -68,8 +66,6 @@ fun AccountDetailScreen(
             Toast.makeText(context, "Lỗi: Không tìm thấy ID người dùng", Toast.LENGTH_SHORT).show()
             return
         }
-//
-        // call api
         isLoading = true
         val request = UpdateProfileRequest(id = userId, name = name, phone = phone, address = address)
 

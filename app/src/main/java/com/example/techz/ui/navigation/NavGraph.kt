@@ -126,19 +126,11 @@ fun AppNavGraph(
             AccountOrderDetailScreen(navController=navController, orderId = orderId)
         }
 
-
-
-
-
         composable(Screen.Detail.route) { backStackEntry ->
-            // Lấy ID từ đường dẫn
             val productIdStr = backStackEntry.arguments?.getString("id")
             val productId = productIdStr?.toIntOrNull()
-
-
             var product by remember { mutableStateOf<com.example.techz.model.Product?>(null) }
 
-            // Gọi API lấy chi tiết sản phẩm
             LaunchedEffect(productId) {
                 if (productId != null) {
                     com.example.techz.service.RetrofitClient.instance.getProductDetail(productId).enqueue(object : retrofit2.Callback<com.example.techz.model.Product> {
@@ -153,15 +145,13 @@ fun AppNavGraph(
             if (product != null) {
                 ProductDetailScreen(
                     product = product!!,
-                    navController = navController, // <--- QUAN TRỌNG: Truyền navController vào đây
+                    navController = navController,
                     onBack = { navController.popBackStack() },
                     onProductClick = { newProduct ->
-                        // Chuyển sang sản phẩm khác
                         navController.navigate(Screen.Detail.passId(newProduct.id.toString()))
                     }
                 )
             } else {
-                // Hiển thị loading hoặc lỗi
                 Box(modifier = androidx.compose.ui.Modifier.fillMaxSize(), contentAlignment = androidx.compose.ui.Alignment.Center) {
                     CircularProgressIndicator()
                 }
