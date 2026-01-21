@@ -17,8 +17,9 @@ import android.os.Handler
 
 @SuppressLint("StaticFieldLeak")
 object RetrofitClient {
+    private const val BASE_URL = "https://dvna.site/"
 
-    private const val BASE_URL = "http://103.228.36.78:3000/"
+    //private const val BASE_URL = "http://103.228.36.78:3000/"
     private var apiService: ApiService? = null
     private var appContext: Context? = null
 
