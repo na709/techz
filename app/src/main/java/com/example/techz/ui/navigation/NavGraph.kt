@@ -114,7 +114,10 @@ fun AppNavGraph(
                     navController.navigate("login")
                 },
                 onMissingInfo = { navController.navigate("account_detail")
-                }
+                },
+                onProductClick = { productId ->
+                    navController.navigate(Screen.Detail.passId(productId.toString()))
+                }//new
             )
         }
         composable(

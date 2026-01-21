@@ -45,7 +45,8 @@ fun CartScreen(
     onCheckout: () -> Unit,
     onBack: () -> Unit,
     onRequireLogin: () -> Unit,
-    onMissingInfo: () -> Unit
+    onMissingInfo: () -> Unit,
+    onProductClick: (Int) -> Unit//new
 ) {
     val context = LocalContext.current
     val cartItems = CartManager.cartItems
@@ -265,7 +266,8 @@ fun CartScreen(
                         item = item,
                         context = context,
                         isSelected = isSelected, // <--- Đã thêm
-                        onToggleSelect = { toggleSelection(item.product.id) } // <--- Đã thêm
+                        onToggleSelect = { toggleSelection(item.product.id) }, // <--- Đã thêm
+                        onProductClick = onProductClick
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                 }
@@ -303,7 +305,8 @@ fun CartItemRow(item: CartItem,
                 context: Context,
                 //new----
                 isSelected: Boolean,
-                onToggleSelect: () -> Unit
+                onToggleSelect: () -> Unit,
+                onProductClick: (Int) -> Unit
                 //--------
 ) {
     // Đảm bảo URL ảnh đúng với Server của bạn
@@ -326,21 +329,32 @@ fun CartItemRow(item: CartItem,
             )
             //----
 
+            // [THÊM] Click vào ẢNH -> Chuyển màn hình chi tiết
             AsyncImage(
-                model = fullImageUrl,
-                contentDescription = null,
-                modifier = Modifier.size(90.dp).background(Color.White),
+                model = fullImageUrl, contentDescription = null,
+                modifier = Modifier
+                    .size(80.dp)
+                    .background(Color.White)
+                    .clickable { onProductClick(item.product.id) }, // <--- Click ảnh
                 contentScale = ContentScale.Fit,
                 error = painterResource(android.R.drawable.ic_menu_report_image)
             )
 
-            Column(modifier = Modifier.padding(start = 12.dp).weight(1f)) {
-                Text(item.product.name, fontWeight = FontWeight.SemiBold, fontSize = 14.sp, maxLines = 2)
+            Column(modifier = Modifier.padding(start = 8.dp).weight(1f)) {
+                // [THÊM] Click vào TÊN -> Chuyển màn hình chi tiết
                 Text(
-                    "Giá: ${formatCurrency(item.product.price)}",
+                    item.product.name,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 14.sp,
+                    maxLines = 2,
+                    modifier = Modifier.clickable { onProductClick(item.product.id) } // <--- Click tên
+                )
+                Text(
+                    text = formatCurrency(item.product.price),
                     color = Color.Red,
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 15.sp,
+                    modifier = Modifier.padding(vertical = 4.dp)
                 )
                 Text(
                     text = "Còn lại: ${item.product.stock}",
