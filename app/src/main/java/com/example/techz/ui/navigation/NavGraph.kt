@@ -23,6 +23,7 @@ import com.example.techz.ui.screens.account.AccountOrderScreen
 import com.example.techz.ui.screens.account.AccountScreen
 import com.example.techz.ui.screens.admin.AddVoucherScreen
 import com.example.techz.ui.screens.admin.AdminDashboardScreen
+import com.example.techz.ui.screens.admin.AdminOrderDetailScreen
 import com.example.techz.ui.screens.admin.AdminOrderScreen
 import com.example.techz.ui.screens.admin.AdminProductScreen
 import com.example.techz.ui.screens.cart.CartScreen
@@ -258,13 +259,20 @@ fun AppNavGraph(
                 )}
         composable(Screen.AdminOrder.route) {
             AdminOrderScreen(navController = navController)
+
         }
         composable(Screen.AdminProductList.route) {
             AdminProductScreen(navController = navController)
         }
-        composable(Screen.AdminOrder.route) {
-            AdminOrderScreen(navController = navController)
-        }
 
+        // Thêm cái này
+        composable(
+            route = Screen.AdminOrderDetail.route, // SỬA: Chỉ dùng route gốc, KHÔNG cộng thêm "/{orderId}"
+            arguments = listOf(navArgument("orderId") { type = NavType.StringType }) // Bạn có thể giữ StringType hoặc đổi sang IntType tùy ý
+        ) { backStackEntry ->
+            val orderIdString = backStackEntry.arguments?.getString("orderId")
+            val orderId = orderIdString?.toIntOrNull() ?: 0
+            AdminOrderDetailScreen(navController = navController, orderId = orderId)
+        }
     }
 }

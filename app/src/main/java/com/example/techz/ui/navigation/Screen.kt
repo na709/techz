@@ -20,5 +20,9 @@ sealed class Screen(val route: String) {
     }
     object AdminDashboard : Screen("admin_dashboard")
     object AdminOrder: Screen("admin_order")
+    // Thêm màn
+    object AdminOrderDetail : Screen("admin_order_detail/{orderId}") {
+        fun passId(id: Int) = "admin_order_detail/$id"
+    }
 
 }

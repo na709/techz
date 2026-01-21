@@ -3,6 +3,7 @@ package com.example.techz.ui.screens.admin
 import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -184,7 +185,10 @@ fun AdminOrderScreen(navController: NavHostController) {
                     items(filteredList) { order ->
                         OrderItem(
                             order = order,
-                            onAction = { action -> processOrderAction(order.id, action) }
+                            onAction = { action -> processOrderAction(order.id, action) },
+                            onClick = { id ->
+                                navController.navigate("admin_order_detail/$id")
+                            }
                         )
                     }
                 }
@@ -194,12 +198,12 @@ fun AdminOrderScreen(navController: NavHostController) {
 }
 
 @Composable
-fun OrderItem(order: OrderResponse, onAction: (String) -> Unit) {
+fun OrderItem(order: OrderResponse, onAction: (String) -> Unit,onClick: (Int) -> Unit) {
     Card(
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(2.dp),
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier.fillMaxWidth().clickable { onClick(order.id)}
     ) {
         Column(modifier = Modifier.padding(12.dp).fillMaxWidth()) {
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
