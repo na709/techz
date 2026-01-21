@@ -1,5 +1,4 @@
 package com.example.techz.ui.screens.product
-//
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.background
@@ -137,7 +136,7 @@ fun ProductDetailScreen(
             // Header ảnh
             Box(modifier = Modifier.fillMaxWidth().height(300.dp).background(Color.White)) {
                 // Xử lý link ảnh
-                val imageUrl = if (product.image?.startsWith("http") == true) product.image else "http://160.250.247.5/images/${product.image}"
+                val imageUrl = if (product.image?.startsWith("http") == true) product.image else "https://s3.cloudfly.vn/techz-product-images/images/${product.image}"
 
                 AsyncImage(
                     model = imageUrl,
@@ -167,7 +166,7 @@ fun ProductDetailScreen(
                 Text(
                     text = "Số lượng còn lại: ${product.stock}",
                     fontSize = 16.sp,
-                    color = if (product.stock > 0) Color.Blue else Color.Red,
+                    color = if (product.stock > 0) Color.Green else Color.Red,
                     fontWeight = FontWeight.Medium
                 )
                 Spacer(modifier = Modifier.height(16.dp))
