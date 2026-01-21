@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.techz.model.Product
+import com.example.techz.service.CartManager
 import java.text.NumberFormat
 import java.util.Locale
 
@@ -86,11 +87,11 @@ fun ProductItem(
                     ) {
                         Text("Xem chi tiết", fontSize = 11.sp)
                     }
-
+                    val quantityInCart = CartManager.cartItems.find { it.product.id == product.id }?.quantity ?: 0
                     Button(
                         onClick = { onAddToCart(product) },
                         modifier = Modifier.size(36.dp),
-                        enabled = product.stock > 0,
+                        enabled = (product.stock > 0)&&(quantityInCart<product.stock),
                         contentPadding = PaddingValues(0.dp),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = Color(0xFF00A9FF),
